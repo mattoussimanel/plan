@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { isNative, nativePermission, requestNativePermission, testNow } from '../lib/native.js'
 
 /** Bouton « Tester les notifications » (Android) : demande l'autorisation si besoin puis envoie une notification immédiate. */
-export default function TestNotificationButton({ className = 'btn', onPermission }) {
+export default function TestNotificationButton({ className = 'btn', onPermission, sound }) {
   const [msg, setMsg] = useState('')
   if (!isNative()) return null
 
@@ -15,7 +15,7 @@ export default function TestNotificationButton({ className = 'btn', onPermission
         setMsg('❌ Notifications non autorisées : Paramètres → Applications → Ma Journée Rosée → Notifications.')
         return
       }
-      await testNow()
+      await testNow(sound)
       setMsg('✅ Notification de test envoyée ! Regarde en haut de l’écran.')
     } catch (e) {
       setMsg(`❌ Erreur : ${String(e?.message || e)}`)

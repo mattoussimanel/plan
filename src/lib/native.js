@@ -3,7 +3,8 @@ import { Capacitor } from '@capacitor/core'
 import { LocalNotifications } from '@capacitor/local-notifications'
 import { App } from '@capacitor/app'
 import { Share } from '@capacitor/share'
-import { CHANNEL_ID, buildSchedule } from './schedule.js'
+import { CHANNEL_ID, buildSchedule, channelFor } from './schedule.js'
+import { SOUNDS } from '../data/content.js'
 import { buildCycleSchedule } from './cycle.js'
 
 export const isNative = () => Capacitor.isNativePlatform()
@@ -26,18 +27,29 @@ export async function requestExactAlarm() {
   try { return (await LocalNotifications.changeExactNotificationSetting()).exact_alarm } catch { return 'granted' }
 }
 
+/** Crée le canal du son choisi (importance maximale, vibration) et supprime les canaux des autres sons */
+async function ensureChannel(sound) {
+  const label = (SOUNDS.find(([id]) => id === sound) || SOUNDS[0])[1]
+  await LocalNotifications.createChannel({
+    id: channelFor(sound), name: `Rappels · ${label}`, description: 'Notifications à l’heure exacte de chaque tâche',
+    importance: 5, visibility: 1, vibration: true, lights: true, lightColor: '#FF5FA2',
+    ...(sound !== 'default' && { sound: `${sound}.wav` }),
+  })
+  for (const id of [CHANNEL_ID, ...SOUNDS.map(([s]) => channelFor(s))].filter((id) => id !== channelFor(sound))) {
+    try { await LocalNotifications.deleteChannel({ id }) } catch { /* canal inexistant */ }
+  }
+}
+
 let queue = Promise.resolve()
 
 /** Remplace toutes les notifications programmées par celles correspondant aux tâches. Appels sérialisés. */
-export function syncNative(tasks, now = new Date(), cycle) {
+export function syncNative(tasks, now = new Date(), cycle, sound = 'carillon') {
   queue = queue.catch(() => {}).then(async () => {
     const { notifications: pending } = await LocalNotifications.getPending()
     if (pending.length) await LocalNotifications.cancel({ notifications: pending.map(({ id }) => ({ id })) })
-    await LocalNotifications.createChannel({
-      id: CHANNEL_ID, name: 'Rappels de tâches', description: 'Notifications à l’heure exacte de chaque tâche',
-      importance: 5, visibility: 1, vibration: true, lights: true, lightColor: '#FF5FA2',
-    })
-    const list = [...buildSchedule(tasks, now), ...(cycle ? buildCycleSchedule(cycle, now) : [])]
+    await ensureChannel(sound)
+    const channelId = channelFor(sound)
+    const list = [...buildSchedule(tasks, now, channelId), ...(cycle ? buildCycleSchedule(cycle, now, channelId) : [])]
     const result = list.length ? await LocalNotifications.schedule({ notifications: list }) : {}
     // on renvoie ce que le système a réellement en attente (et non ce qu'on a demandé)
     // et l'avertissement éventuel « programmé en alarme non exacte »
@@ -47,17 +59,19 @@ export function syncNative(tasks, now = new Date(), cycle) {
 }
 
 /** Notification de test immédiate : vérifie permission + canal, sans alarme */
-export function testNow() {
+export async function testNow(sound = 'carillon') {
+  await ensureChannel(sound)
   return LocalNotifications.schedule({
-    notifications: [{ id: 2, title: '💖 Test immédiat', body: 'Si tu vois ceci, les notifications sont autorisées !', channelId: CHANNEL_ID }],
+    notifications: [{ id: 2, title: '💖 Test immédiat', body: 'Si tu vois ceci, les notifications sont autorisées !', channelId: channelFor(sound) }],
   })
 }
 
 /** Alarme de test dans 1 minute, programmée comme les vraies tâches (ferme l'appli pour l'essayer). Renvoie { inexact, at }. */
-export async function testNative(delayMs = 60000) {
+export async function testNative(delayMs = 60000, sound = 'carillon') {
+  await ensureChannel(sound)
   const at = new Date(Date.now() + delayMs)
   const result = await LocalNotifications.schedule({
-    notifications: [{ id: 1, title: '⏰ Test alarme', body: 'Les rappels programmés fonctionnent !', channelId: CHANNEL_ID, schedule: { at, allowWhileIdle: true } }],
+    notifications: [{ id: 1, title: '⏰ Test alarme', body: 'Les rappels programmés fonctionnent !', channelId: channelFor(sound), schedule: { at, allowWhileIdle: true } }],
   })
   return { inexact: Boolean(result?.warning), at }
 }

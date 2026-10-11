@@ -29,6 +29,7 @@ describe('reducer', () => {
   })
   it('setName limite à 30 caractères', () => expect(reducer(makeState(), { type: 'setName', name: 'x'.repeat(40) }).name).toHaveLength(30))
   it('setTheme', () => expect(reducer(makeState(), { type: 'setTheme', theme: 'lilas' }).theme).toBe('lilas'))
+  it('setSound', () => expect(reducer(makeState(), { type: 'setSound', sound: 'cloche' }).sound).toBe('cloche'))
   it('setWater borne entre 0 et GLASSES', () => {
     expect(reducer(makeState(), { type: 'setWater', key: K, count: 3 }).water[K]).toBe(3)
     expect(reducer(makeState(), { type: 'setWater', key: K, count: -2 }).water[K]).toBe(0)

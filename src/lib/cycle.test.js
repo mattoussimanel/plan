@@ -170,6 +170,7 @@ describe('rappels « X jours avant »', () => {
     expect(l.map((n) => [n.id, n.atKey])).toEqual([['a', '2026-11-08'], ['b', '2026-11-14']])
     expect(l[1].at).toEqual(new Date(2026, 10, 14, 20, 30))
   })
+  it('canal du son choisi', () => expect(buildCycleSchedule(cyc(), NOW, 'rappels_cloche')[0].channelId).toBe('rappels_cloche'))
   it('aucune règle saisie : aucun rappel', () => expect(upcomingReminders(defaultCycle(), NOW)).toEqual([]))
   it('notifications Android : une alarme exacte par rappel avec id entier unique', () => {
     const list = buildCycleSchedule(cyc(), NOW)
@@ -177,7 +178,7 @@ describe('rappels « X jours avant »', () => {
     expect(new Set(list.map((n) => n.id)).size).toBe(list.length)
     for (const n of list) {
       expect(Number.isInteger(n.id) && n.id > 0 && n.id < 2 ** 31).toBe(true)
-      expect(n).toMatchObject({ channelId: 'rappels', schedule: { allowWhileIdle: true } })
+      expect(n).toMatchObject({ channelId: 'rappels_carillon', schedule: { allowWhileIdle: true } })
       expect(n.schedule.at).toBeInstanceOf(Date)
     }
   })

@@ -2,7 +2,9 @@ import { addDays, dateKey, minutesOf } from './dates.js'
 import { bodyFor } from './messages.js'
 import { occursOn } from './tasks.js'
 
-export const CHANNEL_ID = 'rappels'
+export const CHANNEL_ID = 'rappels' // ancien canal sans son personnalisé (supprimé à la synchronisation)
+/** Un canal Android par son : le son d'un canal ne peut pas être modifié une fois créé */
+export const channelFor = (sound = 'carillon') => `rappels_${sound}`
 export const CONTENT_DAYS = 45 // jours programmés à l'avance pour les messages qui changent chaque jour
 const CONTENT_KINDS = ['welcome', 'motivation', 'quote']
 
@@ -20,11 +22,11 @@ export const notifId = (taskId, slot) => hashId(taskId) * 2048 + slot
  * quotidiennes / hebdomadaires = répétées par le système ; « une fois » = date précise ;
  * messages du jour (bienvenue, motivation, citation) = un par jour pendant CONTENT_DAYS jours avec le texte du jour.
  */
-export function buildSchedule(tasks, now = new Date()) {
+export function buildSchedule(tasks, now = new Date(), channelId = channelFor()) {
   const out = []
   for (const t of tasks) {
     if (!t.notify) continue
-    const base = { title: `${t.emoji} ${t.title}`, channelId: CHANNEL_ID, extra: { taskId: t.id } }
+    const base = { title: `${t.emoji} ${t.title}`, channelId, extra: { taskId: t.id } }
     const minutes = minutesOf(t.time)
     const [hour, minute] = [Math.floor(minutes / 60), minutes % 60]
     const sched = (schedule) => ({ ...base, schedule: { allowWhileIdle: true, ...schedule } })

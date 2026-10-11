@@ -1,4 +1,4 @@
-import { CONTENT_DAYS, buildSchedule, hashId, notifId } from './schedule.js'
+import { CONTENT_DAYS, buildSchedule, channelFor, hashId, notifId } from './schedule.js'
 import { quoteOfDay } from './messages.js'
 import { DEFAULT_TASKS } from '../data/content.js'
 import { task } from '../test/helpers.js'
@@ -19,11 +19,21 @@ describe('hashId / notifId', () => {
   it('slots différents = ids différents', () => expect(notifId('a', 0)).not.toBe(notifId('a', 1)))
 })
 
+describe('canal par son', () => {
+  it('channelFor : un canal par son', () => {
+    expect(channelFor()).toBe('rappels_carillon')
+    expect(channelFor('cloche')).toBe('rappels_cloche')
+  })
+  it('buildSchedule utilise le canal demandé', () => {
+    expect(buildSchedule([task()], NOW, 'rappels_cloche')[0].channelId).toBe('rappels_cloche')
+  })
+})
+
 describe('buildSchedule', () => {
   it('quotidienne : une notification répétée par le système à l’heure exacte', () => {
     const [n, ...rest] = only(task({ id: 'a', time: '07:05', title: 'Manger', emoji: '🍽️' }))
     expect(rest).toEqual([])
-    expect(n).toMatchObject({ title: '🍽️ Manger', body: 'C’est l’heure ! 07:05', channelId: 'rappels', schedule: { on: { hour: 7, minute: 5, second: 0 }, allowWhileIdle: true } })
+    expect(n).toMatchObject({ title: '🍽️ Manger', body: 'C’est l’heure ! 07:05', channelId: 'rappels_carillon', schedule: { on: { hour: 7, minute: 5, second: 0 }, allowWhileIdle: true } })
     expect(n.extra).toEqual({ taskId: 'a' })
   })
   it('hebdomadaire : une par jour choisi, jours Android (dimanche = 1)', () => {

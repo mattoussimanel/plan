@@ -10,7 +10,7 @@ vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: vi.fn(() => f
 vi.mock('@capacitor/local-notifications', () => ({
   LocalNotifications: {
     checkPermissions: vi.fn(), requestPermissions: vi.fn(), checkExactNotificationSetting: vi.fn(), changeExactNotificationSetting: vi.fn(),
-    getPending: vi.fn(), cancel: vi.fn(), schedule: vi.fn(), createChannel: vi.fn(),
+    getPending: vi.fn(), cancel: vi.fn(), schedule: vi.fn(), createChannel: vi.fn(), deleteChannel: vi.fn(),
   },
 }))
 vi.mock('@capacitor/app', () => ({ App: { addListener: vi.fn(), exitApp: vi.fn(), getInfo: vi.fn() } }))
@@ -59,8 +59,8 @@ describe('native', () => {
     const n = await syncNative([task({ id: 'a' })], NOW)
     expect(n).toEqual({ count: 1, inexact: false }) // nombre réellement en attente côté système
     expect(LocalNotifications.cancel).toHaveBeenCalledWith({ notifications: [{ id: 1 }, { id: 2 }] })
-    expect(LocalNotifications.createChannel).toHaveBeenCalledWith(expect.objectContaining({ id: 'rappels', importance: 5, vibration: true }))
-    expect(LocalNotifications.schedule).toHaveBeenCalledWith({ notifications: [expect.objectContaining({ channelId: 'rappels', schedule: expect.objectContaining({ on: { hour: 9, minute: 0, second: 0 } }) })] })
+    expect(LocalNotifications.createChannel).toHaveBeenCalledWith(expect.objectContaining({ id: 'rappels_carillon', importance: 5, vibration: true, sound: 'carillon.wav' }))
+    expect(LocalNotifications.schedule).toHaveBeenCalledWith({ notifications: [expect.objectContaining({ channelId: 'rappels_carillon', schedule: expect.objectContaining({ on: { hour: 9, minute: 0, second: 0 } }) })] })
   })
   it('syncNative programme aussi les rappels du cycle (X jours avant)', async () => {
     LocalNotifications.getPending.mockResolvedValue({ notifications: [] })
@@ -70,6 +70,32 @@ describe('native', () => {
     expect(notifications.length).toBeGreaterThan(0)
     expect(notifications.every((n) => n.extra.cycleReminder && n.schedule.at instanceof Date)).toBe(true)
     expect(notifications[0].title).toMatch(/Ovulation|Mes règles/)
+  })
+  it('son choisi : canal dédié avec son fichier, anciens canaux supprimés', async () => {
+    await syncNative([task()], NOW, undefined, 'cloche')
+    expect(LocalNotifications.createChannel).toHaveBeenCalledWith(expect.objectContaining({ id: 'rappels_cloche', sound: 'cloche.wav' }))
+    const [{ notifications }] = LocalNotifications.schedule.mock.calls[0]
+    expect(notifications[0].channelId).toBe('rappels_cloche')
+    const deleted = LocalNotifications.deleteChannel.mock.calls.map(([a]) => a.id)
+    expect(deleted).toEqual(expect.arrayContaining(['rappels', 'rappels_carillon', 'rappels_default']))
+    expect(deleted).not.toContain('rappels_cloche')
+  })
+  it('son du téléphone : canal sans fichier de son', async () => {
+    await syncNative([task()], NOW, undefined, 'default')
+    const [channel] = LocalNotifications.createChannel.mock.calls[0]
+    expect(channel.id).toBe('rappels_default')
+    expect(channel).not.toHaveProperty('sound')
+  })
+  it('la suppression d’un canal inexistant n’empêche pas la programmation', async () => {
+    LocalNotifications.deleteChannel.mockRejectedValue(new Error('absent'))
+    await expect(syncNative([task()], NOW)).resolves.toMatchObject({ count: expect.any(Number) })
+  })
+  it('les tests utilisent le canal du son choisi', async () => {
+    await testNow('cloche')
+    expect(LocalNotifications.createChannel).toHaveBeenCalledWith(expect.objectContaining({ id: 'rappels_cloche' }))
+    expect(LocalNotifications.schedule.mock.calls[0][0].notifications[0].channelId).toBe('rappels_cloche')
+    await testNative(1000, 'cloche')
+    expect(LocalNotifications.schedule.mock.calls[1][0].notifications[0].channelId).toBe('rappels_cloche')
   })
   it('syncNative sans rien à programmer : n’appelle pas schedule ni cancel', async () => {
     expect(await syncNative([], NOW)).toEqual({ count: 0, inexact: false })
@@ -90,7 +116,7 @@ describe('native', () => {
     await testNow()
     const [{ notifications: [n] }] = LocalNotifications.schedule.mock.calls[0]
     expect(n.schedule).toBeUndefined()
-    expect(n.channelId).toBe('rappels')
+    expect(n.channelId).toBe('rappels_carillon')
   })
   it('syncNative signale une programmation non exacte', async () => {
     LocalNotifications.getPending.mockResolvedValue({ notifications: [{ id: 1 }] })

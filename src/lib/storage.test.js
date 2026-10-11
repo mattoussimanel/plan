@@ -26,6 +26,15 @@ describe('normalizeState', () => {
   })
 })
 
+describe('son des notifications', () => {
+  it('carillon par défaut, valeur invalide ignorée', () => {
+    expect(initialState().sound).toBe('carillon')
+    expect(normalizeState({ sound: 'cloche' }).sound).toBe('cloche')
+    expect(normalizeState({ sound: 'default' }).sound).toBe('default')
+    expect(normalizeState({ sound: 'bidon' }).sound).toBe('carillon')
+  })
+})
+
 describe('cycle dans l’état', () => {
   it('toujours présent et nettoyé', () => {
     expect(initialState().cycle.reminders).toHaveLength(2)

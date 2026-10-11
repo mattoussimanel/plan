@@ -6,7 +6,7 @@ import { defaultCycle, normalizeCycle } from './cycle.js'
 export const STATE_KEY = 'ma-journee-state-v1'
 const KEEP_DAYS = 120
 
-export const initialState = () => ({ name: '', theme: 'rose', tasks: DEFAULT_TASKS, done: {}, water: {}, mood: {}, cycle: defaultCycle() })
+export const initialState = () => ({ name: '', theme: 'rose', sound: 'carillon', tasks: DEFAULT_TASKS, done: {}, water: {}, mood: {}, cycle: defaultCycle() })
 
 const pickByDay = (obj, keep) => Object.fromEntries(Object.entries(obj && typeof obj === 'object' ? obj : {}).filter(([k, v]) => isValidKey(k) && keep(v)))
 
@@ -19,6 +19,7 @@ export function normalizeState(raw) {
   return {
     name: typeof raw.name === 'string' ? raw.name.slice(0, 30) : '',
     theme: ['rose', 'peche', 'lilas'].includes(raw.theme) ? raw.theme : 'rose',
+    sound: ['carillon', 'cloche', 'default'].includes(raw.sound) ? raw.sound : 'carillon',
     tasks: tasks.filter((t) => !ids.has(t.id) && ids.add(t.id)),
     done: pickByDay(raw.done, Array.isArray),
     water: pickByDay(raw.water, Number.isInteger),

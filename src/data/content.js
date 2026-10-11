@@ -36,6 +36,7 @@ export const DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
 export const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]
 export const MOODS = ['😍', '😊', '😐', '😔', '😭']
 export const GLASSES = 8
+export const SOUNDS = [['carillon', 'Carillon ✨'], ['cloche', 'Cloche 🔔'], ['default', 'Son du téléphone 📱']]
 export const THEMES = [['rose', 'Rose'], ['peche', 'Pêche'], ['lilas', 'Lilas']]
 
 // kind : contenu spécial affiché dans la carte de la tâche (welcome | motivation | quote)

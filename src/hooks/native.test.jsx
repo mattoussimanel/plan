@@ -30,7 +30,7 @@ describe('useNativeSync', () => {
     const tasks = [task()]
     const cycle = { periods: [] }
     renderHook(() => useNativeSync(tasks, true, cycle))
-    expect(sync).toHaveBeenCalledWith(tasks, expect.any(Date), cycle)
+    expect(sync).toHaveBeenCalledWith(tasks, expect.any(Date), cycle, undefined)
   })
   it('ne fait rien sur le web ou sans autorisation', () => {
     const sync = vi.spyOn(native, 'syncNative').mockResolvedValue({ count: 1, inexact: false })
@@ -169,6 +169,23 @@ describe('SettingsView sur Android', () => {
     await user.click(await screen.findByRole('button', { name: 'Alarmes exactes' }))
     expect(req).toHaveBeenCalled()
     expect(await screen.findByText(/Alarmes exactes : autorisées/)).toBeInTheDocument()
+  })
+  it('choix du son : change, écoute l’aperçu (sauf son du téléphone) et rappelle le volume', async () => {
+    const play = vi.fn().mockResolvedValue()
+    const Audio = vi.fn(function () { return { play } })
+    vi.stubGlobal('Audio', Audio)
+    const { user, dispatch } = setup('granted')
+    expect(await screen.findByRole('group', { name: 'Son des notifications' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Carillon/ })).toHaveAttribute('aria-pressed', 'true')
+    await user.click(screen.getByRole('button', { name: /Cloche/ }))
+    expect(dispatch).toHaveBeenLastCalledWith({ type: 'setSound', sound: 'cloche' })
+    expect(Audio).toHaveBeenCalledWith('./sounds/cloche.wav')
+    await user.click(screen.getByRole('button', { name: /Écouter/ }))
+    expect(Audio).toHaveBeenLastCalledWith('./sounds/carillon.wav')
+    Audio.mockClear()
+    await user.click(screen.getByRole('button', { name: /Son du téléphone/ }))
+    expect(dispatch).toHaveBeenLastCalledWith({ type: 'setSound', sound: 'default' })
+    expect(Audio).not.toHaveBeenCalled()
   })
   it('exporter la sauvegarde ouvre le partage Android', async () => {
     const share = vi.spyOn(native, 'shareText').mockResolvedValue()

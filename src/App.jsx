@@ -26,7 +26,7 @@ export default function App() {
   const { banner, dismiss, perm, setPerm, enable, check } = useReminders(stateRef)
   const now = useNow(check)
 
-  const nativeStatus = useNativeSync(state.tasks, perm === 'granted', state.cycle)
+  const nativeStatus = useNativeSync(state.tasks, perm === 'granted', state.cycle, state.sound)
   useEffect(() => { if (isNative() && perm === 'default') enable() }, [perm, enable]) // demande l'autorisation au premier lancement
   useBackButton(useCallback(() => {
     if (editing) { setEditing(null); return true }

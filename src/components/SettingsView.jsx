@@ -1,4 +1,4 @@
-import { THEMES } from '../data/content.js'
+import { SOUNDS, THEMES } from '../data/content.js'
 import { weekStats, totalDone } from '../lib/progress.js'
 import { buildICS } from '../lib/ics.js'
 import { download } from '../lib/download.js'
@@ -15,13 +15,37 @@ function Bars({ week }) {
   )
 }
 
-function NativeNotifications({ perm, onEnableNotifs, status, onPermission, now }) {
+export function previewSound(id) {
+  if (id === 'default') return
+  const audio = new Audio(`./sounds/${id}.wav`)
+  audio.play?.().catch?.(() => {})
+}
+
+function SoundPicker({ sound, dispatch }) {
+  return (
+    <div className="field">
+      <span className="field-label">🔊 Son des notifications</span>
+      <div className="seg" role="group" aria-label="Son des notifications">
+        {SOUNDS.map(([id, label]) => (
+          <button type="button" key={id} aria-pressed={sound === id} className={sound === id ? 'sel' : ''}
+            onClick={() => { dispatch({ type: 'setSound', sound: id }); previewSound(id) }}>{label}</button>
+        ))}
+      </div>
+      <div className="actions left">
+        <button type="button" className="btn ghost" onClick={() => previewSound(sound)} disabled={sound === 'default'}>▶ Écouter</button>
+      </div>
+      <p className="hint">Le son suit le volume « Notifications » du téléphone (pas le mode silencieux).</p>
+    </div>
+  )
+}
+
+function NativeNotifications({ perm, onEnableNotifs, status, onPermission, now, sound, dispatch }) {
   const [exact, setExact] = useState('granted')
   const [testError, setTestError] = useState('')
   const [version, setVersion] = useState('')
   useEffect(() => { exactAlarmStatus().then(setExact) }, [perm])
   useEffect(() => { appVersion().then(setVersion) }, [])
-  const testAlarm = () => testNative().then(({ inexact, at }) => {
+  const testAlarm = () => testNative(undefined, sound).then(({ inexact, at }) => {
     setTestError('')
     const hh = at.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', hour12: false })
     alert(`Alarme de test programmée à ${hh}. Ferme l’appli et attends 1 minute.${inexact ? '\n⚠️ Alarme non exacte : autorise « Alarmes et rappels » pour ce téléphone.' : ''}`)
@@ -42,9 +66,10 @@ function NativeNotifications({ perm, onEnableNotifs, status, onPermission, now }
       <div className="actions left">
         {(perm === 'default' || perm === 'unsupported') && <button className="btn" onClick={onEnableNotifs}>Autoriser</button>}
         {exact === 'denied' && <button className="btn" onClick={() => requestExactAlarm().then(setExact)}>Alarmes exactes</button>}
-        <TestNotificationButton onPermission={onPermission} />
+        <TestNotificationButton onPermission={onPermission} sound={sound} />
         {perm === 'granted' && <button className="btn ghost" onClick={testAlarm}>⏰ Tester une alarme (1 min)</button>}
       </div>
+      <SoundPicker sound={sound} dispatch={dispatch} />
       <p className="hint">Version installée : {version || '…'}</p>
       <p className="hint">Si le test immédiat marche mais pas les rappels : Paramètres → Applications → Ma Journée Rosée → Batterie → « Sans restriction » (sur OnePlus / Oppo / Realme : active aussi « Lancement automatique » et « Autoriser l’activité en arrière-plan »), et ne ferme pas l’appli de force (balayage « forcer l’arrêt »).</p>
     </div>
@@ -79,7 +104,7 @@ export default function SettingsView({ state, dispatch, now, perm, onEnableNotif
         <h3>📊 Ma semaine <small>{totalDone(state)} tâches accomplies au total</small></h3>
         <Bars week={weekStats(state, now)} />
       </div>
-      {native ? <NativeNotifications perm={perm} onEnableNotifs={onEnableNotifs} status={nativeStatus} onPermission={onPermission} now={now} /> : (
+      {native ? <NativeNotifications perm={perm} onEnableNotifs={onEnableNotifs} status={nativeStatus} onPermission={onPermission} now={now} sound={state.sound} dispatch={dispatch} /> : (
       <div className="card">
         <h3>🔔 Notifications</h3>
         {perm === 'unsupported' && <p className="hint">Ton navigateur ne supporte pas les notifications. Sur iPhone, ajoute d’abord l’app à l’écran d’accueil.</p>}

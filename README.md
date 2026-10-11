@@ -27,7 +27,7 @@ Les rappels sont des **notifications locales exactes** programmées par Android 
   (télécharge-les depuis **Releases** : les « artefacts » de l'onglet Actions sont toujours zippés par GitHub, il n'y en a donc plus).
 - Installation : ouvrir le fichier APK sur le téléphone, autoriser « sources inconnues », puis accepter les notifications au premier lancement.
 - Build local (JDK 21 + Android SDK) : `npm run build && npx cap sync android && cd android && ./gradlew assembleRelease`.
-- Icônes/écran de démarrage : `node scripts/android-assets.mjs`.
+- Icônes/écran de démarrage : `node scripts/android-assets.mjs` ; sons de notification : `node scripts/make-sounds.mjs`.
 
 ## Suivi du cycle 🌙
 Onglet **Cycle** : saisie des règles (début / fin), calendrier (règles, règles prévues, fenêtre fertile, ovulation), fiche par jour

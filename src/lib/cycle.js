@@ -1,5 +1,5 @@
 import { addDaysKey, diffDays, isValidKey, isValidTime, pad, parseKey, dateKey } from './dates.js'
-import { hashId } from './schedule.js'
+import { channelFor, hashId } from './schedule.js'
 
 export const EVENTS = {
   period: { label: 'Mes règles', emoji: '🌙' },
@@ -201,10 +201,10 @@ export function upcomingReminders(cycle, now = new Date(), horizonDays = 90) {
 }
 
 /** Notifications Android (une alarme exacte par rappel) pour les rappels du cycle */
-export function buildCycleSchedule(cycle, now = new Date()) {
+export function buildCycleSchedule(cycle, now = new Date(), channelId = channelFor()) {
   return upcomingReminders(cycle, now).map((n) => ({
     id: hashId(`cy-${n.id}`) * 2048 + (diffDays(n.atKey, '2020-01-01') % 2048),
-    title: n.title, body: n.body, channelId: 'rappels', extra: { cycleReminder: n.id },
+    title: n.title, body: n.body, channelId, extra: { cycleReminder: n.id },
     schedule: { at: n.at, allowWhileIdle: true },
   }))
 }

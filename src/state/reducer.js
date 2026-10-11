@@ -26,6 +26,7 @@ export function reducer(state, action) {
     }
     case 'setName': return { ...state, name: action.name.slice(0, 30) }
     case 'setTheme': return { ...state, theme: action.theme }
+    case 'setSound': return { ...state, sound: action.sound }
     case 'setWater': return { ...state, water: { ...state.water, [action.key]: Math.max(0, Math.min(GLASSES, action.count)) } }
     case 'setMood': return { ...state, mood: { ...state.mood, [action.key]: action.mood } }
     case 'resetTasks': return { ...state, tasks: DEFAULT_TASKS }
