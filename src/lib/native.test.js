@@ -2,7 +2,7 @@ import { LocalNotifications } from '@capacitor/local-notifications'
 import { Capacitor } from '@capacitor/core'
 import { App } from '@capacitor/app'
 import { Share } from '@capacitor/share'
-import { exactAlarmStatus, isNative, nativePermission, onBackButton, onResume, requestExactAlarm, requestNativePermission, shareText, syncNative, testNative } from './native.js'
+import { exactAlarmStatus, isNative, nativePermission, onBackButton, onResume, requestExactAlarm, requestNativePermission, shareText, syncNative, testNative, testNow } from './native.js'
 import { task } from '../test/helpers.js'
 
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: vi.fn(() => false) } }))
@@ -52,9 +52,11 @@ describe('native', () => {
   })
 
   it('syncNative annule l’existant, crée le canal puis programme', async () => {
-    LocalNotifications.getPending.mockResolvedValue({ notifications: [{ id: 1, title: 'old' }, { id: 2 }] })
+    LocalNotifications.getPending
+      .mockResolvedValueOnce({ notifications: [{ id: 1, title: 'old' }, { id: 2 }] })
+      .mockResolvedValueOnce({ notifications: [{ id: 9 }] })
     const n = await syncNative([task({ id: 'a' })], NOW)
-    expect(n).toBe(1)
+    expect(n).toBe(1) // nombre réellement en attente côté système
     expect(LocalNotifications.cancel).toHaveBeenCalledWith({ notifications: [{ id: 1 }, { id: 2 }] })
     expect(LocalNotifications.createChannel).toHaveBeenCalledWith(expect.objectContaining({ id: 'rappels', importance: 5, vibration: true }))
     expect(LocalNotifications.schedule).toHaveBeenCalledWith({ notifications: [expect.objectContaining({ channelId: 'rappels', schedule: expect.objectContaining({ on: { hour: 9, minute: 0 } }) })] })
@@ -73,6 +75,12 @@ describe('native', () => {
     await expect(p1).rejects.toThrow('boom')
     await p2
     expect(order).toEqual(['1-start', '1-end', '2'])
+  })
+  it('testNow affiche tout de suite (sans planification)', async () => {
+    await testNow()
+    const [{ notifications: [n] }] = LocalNotifications.schedule.mock.calls[0]
+    expect(n.schedule).toBeUndefined()
+    expect(n.channelId).toBe('rappels')
   })
   it('testNative programme une notification dans 5 secondes', async () => {
     const before = Date.now()

@@ -3,7 +3,7 @@ import { weekStats, totalDone } from '../lib/progress.js'
 import { buildICS } from '../lib/ics.js'
 import { download } from '../lib/download.js'
 import { showNotification } from '../lib/notifications.js'
-import { exactAlarmStatus, isNative, requestExactAlarm, shareText, testNative } from '../lib/native.js'
+import { exactAlarmStatus, isNative, requestExactAlarm, shareText, testNative, testNow } from '../lib/native.js'
 import { useEffect, useState } from 'react'
 
 function Bars({ week }) {
@@ -14,27 +14,34 @@ function Bars({ week }) {
   )
 }
 
-function NativeNotifications({ perm, onEnableNotifs }) {
+function NativeNotifications({ perm, onEnableNotifs, status }) {
   const [exact, setExact] = useState('granted')
+  const [testError, setTestError] = useState('')
   useEffect(() => { exactAlarmStatus().then(setExact) }, [perm])
+  const run = (fn, message) => fn().then(() => { setTestError(''); if (message) alert(message) }).catch((e) => setTestError(String(e?.message || e)))
   return (
     <div className="card">
       <h3>🔔 Notifications Android</h3>
-      {perm === 'granted' && exact === 'granted' && <p className="hint ok">Activées : rappels à l’heure exacte, même appli fermée ✓</p>}
-      {perm === 'denied' && <p className="hint">Notifications bloquées : autorise-les dans Paramètres → Applications → Ma Journée Rosée → Notifications.</p>}
-      {perm === 'default' && <p className="hint">Autorise les notifications pour recevoir tes rappels.</p>}
+      <ul className="diag">
+        <li>{perm === 'granted' ? '✅' : '❌'} Autorisation des notifications : {perm === 'granted' ? 'accordée' : perm === 'denied' ? 'refusée' : 'à accorder'}</li>
+        <li>{exact === 'granted' ? '✅' : '❌'} Alarmes exactes : {exact === 'granted' ? 'autorisées' : 'refusées'}</li>
+        <li>{status.error ? '❌' : status.count ? '✅' : '⏳'} Rappels programmés : {status.error || (status.count == null ? 'en cours…' : status.count)}</li>
+      </ul>
+      {perm === 'denied' && <p className="hint">Notifications bloquées : Paramètres → Applications → Ma Journée Rosée → Notifications → Autoriser.</p>}
       {perm === 'granted' && exact === 'denied' && <p className="hint">Autorise « Alarmes et rappels » pour que les notifications arrivent à la minute exacte.</p>}
+      {testError && <p className="hint">Erreur : {testError}</p>}
       <div className="actions left">
         {perm === 'default' && <button className="btn" onClick={onEnableNotifs}>Autoriser</button>}
         {exact === 'denied' && <button className="btn" onClick={() => requestExactAlarm().then(setExact)}>Alarmes exactes</button>}
-        {perm === 'granted' && <button className="btn ghost" onClick={() => testNative().then(() => alert('Notification de test dans 5 secondes : ferme l’appli pour essayer !'))}>Tester</button>}
+        {perm === 'granted' && <button className="btn" onClick={() => run(testNow)}>Tester maintenant</button>}
+        {perm === 'granted' && <button className="btn ghost" onClick={() => run(testNative, 'Notification dans 5 secondes : ferme l’appli pour essayer !')}>Tester dans 5 s</button>}
       </div>
-      <p className="hint">Astuce : si certaines notifications n’arrivent pas, désactive l’optimisation de batterie pour l’appli (Paramètres → Applications → Batterie → Sans restriction).</p>
+      <p className="hint">Si le test immédiat marche mais pas les rappels : Paramètres → Applications → Ma Journée Rosée → Batterie → « Sans restriction », et ne ferme pas l’appli de force (balayage « forcer l’arrêt »).</p>
     </div>
   )
 }
 
-export default function SettingsView({ state, dispatch, now, perm, onEnableNotifs }) {
+export default function SettingsView({ state, dispatch, now, perm, onEnableNotifs, nativeStatus = { count: null, error: '' } }) {
   const native = isNative()
   const importBackup = (file) => {
     const fr = new FileReader()
@@ -62,7 +69,7 @@ export default function SettingsView({ state, dispatch, now, perm, onEnableNotif
         <h3>📊 Ma semaine <small>{totalDone(state)} tâches accomplies au total</small></h3>
         <Bars week={weekStats(state, now)} />
       </div>
-      {native ? <NativeNotifications perm={perm} onEnableNotifs={onEnableNotifs} /> : (
+      {native ? <NativeNotifications perm={perm} onEnableNotifs={onEnableNotifs} status={nativeStatus} /> : (
       <div className="card">
         <h3>🔔 Notifications</h3>
         {perm === 'unsupported' && <p className="hint">Ton navigateur ne supporte pas les notifications. Sur iPhone, ajoute d’abord l’app à l’écran d’accueil.</p>}

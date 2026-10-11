@@ -25,7 +25,7 @@ export default function App() {
   const { banner, dismiss, perm, enable, check } = useReminders(stateRef)
   const now = useNow(check)
 
-  useNativeSync(state.tasks, perm === 'granted')
+  const nativeStatus = useNativeSync(state.tasks, perm === 'granted')
   useEffect(() => { if (isNative() && perm === 'default') enable() }, [perm, enable]) // demande l'autorisation au premier lancement
   useBackButton(useCallback(() => {
     if (editing) { setEditing(null); return true }
@@ -61,7 +61,7 @@ export default function App() {
             perm={perm} onEnableNotifs={enable} onToggle={toggle} onEdit={setEditing} />
         )}
         {tab === 'tasks' && <TasksView tasks={state.tasks} onEdit={setEditing} />}
-        {tab === 'me' && <SettingsView state={state} dispatch={dispatch} now={now} perm={perm} onEnableNotifs={enable} />}
+        {tab === 'me' && <SettingsView state={state} dispatch={dispatch} now={now} perm={perm} onEnableNotifs={enable} nativeStatus={nativeStatus} />}
       </main>
       <button className="fab" aria-label="Ajouter une tâche" onClick={() => setEditing(newTaskDraft(key))}>＋</button>
       <TabBar tab={tab} onChange={setTab} />

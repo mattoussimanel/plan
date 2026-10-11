@@ -31,11 +31,23 @@ describe('useNativeSync', () => {
     renderHook(() => useNativeSync([task()], false))
     expect(sync).not.toHaveBeenCalled()
   })
-  it('une erreur de programmation n’est pas propagée', async () => {
+  it('expose le nombre de rappels programmés', async () => {
     asNative()
-    vi.spyOn(native, 'syncNative').mockRejectedValue(new Error('x'))
+    vi.spyOn(native, 'syncNative').mockResolvedValue(12)
     vi.spyOn(native, 'onResume').mockReturnValue(() => {})
-    expect(() => renderHook(() => useNativeSync([task()], true))).not.toThrow()
+    const tasks = [task()]
+    const { result } = renderHook(() => useNativeSync(tasks, true))
+    await act(async () => {})
+    expect(result.current).toEqual({ count: 12, error: '' })
+  })
+  it('expose l’erreur de programmation au lieu de l’avaler', async () => {
+    asNative()
+    vi.spyOn(native, 'syncNative').mockRejectedValue(new Error('exact alarm refused'))
+    vi.spyOn(native, 'onResume').mockReturnValue(() => {})
+    const tasks = [task()]
+    const { result } = renderHook(() => useNativeSync(tasks, true))
+    await act(async () => {})
+    expect(result.current).toEqual({ count: null, error: 'exact alarm refused' })
   })
 })
 
@@ -74,21 +86,40 @@ describe('useReminders sur Android', () => {
 })
 
 describe('SettingsView sur Android', () => {
-  const setup = (perm, exact = 'granted') => {
+  const setup = (perm, exact = 'granted', nativeStatus = { count: 7, error: '' }) => {
     asNative()
     vi.spyOn(native, 'exactAlarmStatus').mockResolvedValue(exact)
-    const props = { state: makeState({ name: 'Lina' }), dispatch: vi.fn(), now: SUNDAY, perm, onEnableNotifs: vi.fn() }
+    const props = { state: makeState({ name: 'Lina' }), dispatch: vi.fn(), now: SUNDAY, perm, onEnableNotifs: vi.fn(), nativeStatus }
     render(<SettingsView {...props} />)
     return { user: userEvent.setup(), ...props }
   }
-  it('affiche l’état « activées » et propose un test programmé dans 5 secondes', async () => {
-    const test = vi.spyOn(native, 'testNative').mockResolvedValue()
-    vi.spyOn(window, 'alert').mockImplementation(() => {})
-    const { user } = setup('granted')
-    expect(await screen.findByText(/même appli fermée/)).toBeInTheDocument()
+  it('affiche le diagnostic : autorisation, alarmes exactes, rappels programmés', async () => {
+    setup('granted')
+    expect(await screen.findByText(/Autorisation des notifications : accordée/)).toBeInTheDocument()
+    expect(screen.getByText(/Alarmes exactes : autorisées/)).toBeInTheDocument()
+    expect(screen.getByText(/Rappels programmés : 7/)).toBeInTheDocument()
     expect(screen.queryByText(/Exporter vers mon agenda/)).toBeNull()
-    await user.click(screen.getByRole('button', { name: 'Tester' }))
-    expect(test).toHaveBeenCalled()
+  })
+  it('affiche l’erreur de programmation', async () => {
+    setup('granted', 'granted', { count: null, error: 'boom' })
+    expect(await screen.findByText(/Rappels programmés : boom/)).toBeInTheDocument()
+  })
+  it('test immédiat et test dans 5 secondes', async () => {
+    const now = vi.spyOn(native, 'testNow').mockResolvedValue()
+    const later = vi.spyOn(native, 'testNative').mockResolvedValue()
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    const { user } = setup('granted')
+    await user.click(await screen.findByRole('button', { name: 'Tester maintenant' }))
+    expect(now).toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Tester dans 5 s' }))
+    expect(later).toHaveBeenCalled()
+    await vi.waitFor(() => expect(alert).toHaveBeenCalled())
+  })
+  it('une erreur de test est affichée', async () => {
+    vi.spyOn(native, 'testNow').mockRejectedValue(new Error('canal absent'))
+    const { user } = setup('granted')
+    await user.click(await screen.findByRole('button', { name: 'Tester maintenant' }))
+    expect(await screen.findByText(/canal absent/)).toBeInTheDocument()
   })
   it('permission refusée / à demander', async () => {
     const { user, onEnableNotifs } = setup('default')
@@ -104,7 +135,7 @@ describe('SettingsView sur Android', () => {
     const { user } = setup('granted', 'denied')
     await user.click(await screen.findByRole('button', { name: 'Alarmes exactes' }))
     expect(req).toHaveBeenCalled()
-    expect(await screen.findByText(/même appli fermée/)).toBeInTheDocument()
+    expect(await screen.findByText(/Alarmes exactes : autorisées/)).toBeInTheDocument()
   })
   it('exporter la sauvegarde ouvre le partage Android', async () => {
     const share = vi.spyOn(native, 'shareText').mockResolvedValue()

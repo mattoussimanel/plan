@@ -38,12 +38,20 @@ export function syncNative(tasks, now = new Date()) {
     })
     const list = buildSchedule(tasks, now)
     if (list.length) await LocalNotifications.schedule({ notifications: list })
-    return list.length
+    // on renvoie ce que le système a réellement en attente (et non ce qu'on a demandé)
+    return (await LocalNotifications.getPending()).notifications.length
   })
   return queue
 }
 
-/** Notification de test dans 5 secondes */
+/** Notification de test immédiate : vérifie permission + canal, sans alarme */
+export function testNow() {
+  return LocalNotifications.schedule({
+    notifications: [{ id: 2, title: '💖 Test immédiat', body: 'Si tu vois ceci, les notifications sont autorisées !', channelId: CHANNEL_ID }],
+  })
+}
+
+/** Notification de test dans 5 secondes : vérifie les alarmes exactes (ferme l'appli pour l'essayer) */
 export function testNative() {
   return LocalNotifications.schedule({
     notifications: [{ id: 1, title: '💖 Test', body: 'Les notifications fonctionnent !', channelId: CHANNEL_ID, schedule: { at: new Date(Date.now() + 5000), allowWhileIdle: true } }],

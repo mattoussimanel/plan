@@ -35,3 +35,5 @@ input:focus { border-color: var(--main2); }
 .slider { width: 46px; height: 26px; border-radius: 26px; background: #e8cfda; position: relative; transition: .25s; flex: none; }
 .slider::after { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: .25s; }
 .switch input:checked + .slider { background: var(--main); } .switch input:checked + .slider::after { left: 23px; }
+
+.diag { list-style: none; margin: 8px 0; padding: 0; line-height: 1.7; font-size: .93rem; }
