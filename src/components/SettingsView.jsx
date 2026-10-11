@@ -15,29 +15,35 @@ function Bars({ week }) {
   )
 }
 
-function NativeNotifications({ perm, onEnableNotifs, status, onPermission }) {
+function NativeNotifications({ perm, onEnableNotifs, status, onPermission, now }) {
   const [exact, setExact] = useState('granted')
   const [testError, setTestError] = useState('')
   const [version, setVersion] = useState('')
   useEffect(() => { exactAlarmStatus().then(setExact) }, [perm])
   useEffect(() => { appVersion().then(setVersion) }, [])
-  const run = (fn, message) => fn().then(() => { setTestError(''); if (message) alert(message) }).catch((e) => setTestError(String(e?.message || e)))
+  const testAlarm = () => testNative().then(({ inexact, at }) => {
+    setTestError('')
+    const hh = at.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', hour12: false })
+    alert(`Alarme de test programmée à ${hh}. Ferme l’appli et attends 1 minute.${inexact ? '\n⚠️ Alarme non exacte : autorise « Alarmes et rappels » pour ce téléphone.' : ''}`)
+  }).catch((e) => setTestError(String(e?.message || e)))
   return (
     <div className="card">
       <h3>🔔 Notifications Android</h3>
       <ul className="diag">
         <li>{perm === 'granted' ? '✅' : '❌'} Autorisation des notifications : {perm === 'granted' ? 'accordée' : perm === 'denied' ? 'refusée' : perm === 'unsupported' ? 'indisponible (erreur du plugin)' : 'à accorder'}</li>
         <li>{exact === 'granted' ? '✅' : '❌'} Alarmes exactes : {exact === 'granted' ? 'autorisées' : 'refusées'}</li>
-        <li>{status.error ? '❌' : status.count ? '✅' : '⏳'} Rappels programmés : {status.error || (status.count == null ? 'en cours…' : status.count)}</li>
+        <li>{status.error ? '❌' : status.count ? (status.inexact ? '⚠️' : '✅') : '⏳'} Rappels programmés : {status.error || (status.count == null ? 'en cours…' : status.count)}{status.inexact ? ' (non exacts)' : ''}</li>
+        <li>🕒 Heure de ton téléphone : {now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} ({Intl.DateTimeFormat().resolvedOptions().timeZone})</li>
       </ul>
       {perm === 'denied' && <p className="hint">Notifications bloquées : Paramètres → Applications → Ma Journée Rosée → Notifications → Autoriser.</p>}
+      {status.inexact && <p className="hint">⚠️ Les rappels sont programmés mais Android peut les retarder. Touche « Alarmes exactes » ci-dessous.</p>}
       {perm === 'granted' && exact === 'denied' && <p className="hint">Autorise « Alarmes et rappels » pour que les notifications arrivent à la minute exacte.</p>}
       {testError && <p className="hint">Erreur : {testError}</p>}
       <div className="actions left">
         {(perm === 'default' || perm === 'unsupported') && <button className="btn" onClick={onEnableNotifs}>Autoriser</button>}
         {exact === 'denied' && <button className="btn" onClick={() => requestExactAlarm().then(setExact)}>Alarmes exactes</button>}
         <TestNotificationButton onPermission={onPermission} />
-        {perm === 'granted' && <button className="btn ghost" onClick={() => run(testNative, 'Notification dans 5 secondes : ferme l’appli pour essayer !')}>Tester dans 5 s</button>}
+        {perm === 'granted' && <button className="btn ghost" onClick={testAlarm}>⏰ Tester une alarme (1 min)</button>}
       </div>
       <p className="hint">Version installée : {version || '…'}</p>
       <p className="hint">Si le test immédiat marche mais pas les rappels : Paramètres → Applications → Ma Journée Rosée → Batterie → « Sans restriction » (sur OnePlus / Oppo / Realme : active aussi « Lancement automatique » et « Autoriser l’activité en arrière-plan »), et ne ferme pas l’appli de force (balayage « forcer l’arrêt »).</p>
@@ -73,7 +79,7 @@ export default function SettingsView({ state, dispatch, now, perm, onEnableNotif
         <h3>📊 Ma semaine <small>{totalDone(state)} tâches accomplies au total</small></h3>
         <Bars week={weekStats(state, now)} />
       </div>
-      {native ? <NativeNotifications perm={perm} onEnableNotifs={onEnableNotifs} status={nativeStatus} onPermission={onPermission} /> : (
+      {native ? <NativeNotifications perm={perm} onEnableNotifs={onEnableNotifs} status={nativeStatus} onPermission={onPermission} now={now} /> : (
       <div className="card">
         <h3>🔔 Notifications</h3>
         {perm === 'unsupported' && <p className="hint">Ton navigateur ne supporte pas les notifications. Sur iPhone, ajoute d’abord l’app à l’écran d’accueil.</p>}

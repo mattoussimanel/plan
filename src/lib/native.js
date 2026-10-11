@@ -37,9 +37,10 @@ export function syncNative(tasks, now = new Date()) {
       importance: 5, visibility: 1, vibration: true, lights: true, lightColor: '#FF5FA2',
     })
     const list = buildSchedule(tasks, now)
-    if (list.length) await LocalNotifications.schedule({ notifications: list })
+    const result = list.length ? await LocalNotifications.schedule({ notifications: list }) : {}
     // on renvoie ce que le système a réellement en attente (et non ce qu'on a demandé)
-    return (await LocalNotifications.getPending()).notifications.length
+    // et l'avertissement éventuel « programmé en alarme non exacte »
+    return { count: (await LocalNotifications.getPending()).notifications.length, inexact: Boolean(result?.warning) }
   })
   return queue
 }
@@ -51,11 +52,13 @@ export function testNow() {
   })
 }
 
-/** Notification de test dans 5 secondes : vérifie les alarmes exactes (ferme l'appli pour l'essayer) */
-export function testNative() {
-  return LocalNotifications.schedule({
-    notifications: [{ id: 1, title: '💖 Test', body: 'Les notifications fonctionnent !', channelId: CHANNEL_ID, schedule: { at: new Date(Date.now() + 5000), allowWhileIdle: true } }],
+/** Alarme de test dans 1 minute, programmée comme les vraies tâches (ferme l'appli pour l'essayer). Renvoie { inexact, at }. */
+export async function testNative(delayMs = 60000) {
+  const at = new Date(Date.now() + delayMs)
+  const result = await LocalNotifications.schedule({
+    notifications: [{ id: 1, title: '⏰ Test alarme', body: 'Les rappels programmés fonctionnent !', channelId: CHANNEL_ID, schedule: { at, allowWhileIdle: true } }],
   })
+  return { inexact: Boolean(result?.warning), at }
 }
 
 /** Bouton « retour » Android : `handler` renvoie true s'il a géré l'évènement, sinon on quitte l'appli. Retourne la fonction de nettoyage. */

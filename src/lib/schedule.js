@@ -38,9 +38,9 @@ export function buildSchedule(tasks, now = new Date()) {
         out.push({ ...sched({ at: when }), id: notifId(t.id, 8 + i), body: bodyFor(t, day) })
       }
     } else if (t.repeat === 'daily') {
-      out.push({ ...sched({ on: { hour, minute } }), id: notifId(t.id, 0), body: bodyFor(t) })
+      out.push({ ...sched({ on: { hour, minute, second: 0 } }), id: notifId(t.id, 0), body: bodyFor(t) })
     } else if (t.repeat === 'weekly') {
-      for (const d of t.days) out.push({ ...sched({ on: { weekday: d + 1, hour, minute } }), id: notifId(t.id, 1 + d), body: bodyFor(t) })
+      for (const d of t.days) out.push({ ...sched({ on: { weekday: d + 1, hour, minute, second: 0 } }), id: notifId(t.id, 1 + d), body: bodyFor(t) })
     } else {
       const when = at(new Date(`${t.date}T00:00:00`))
       if (when > now) out.push({ ...sched({ at: when }), id: notifId(t.id, 0), body: bodyFor(t) })

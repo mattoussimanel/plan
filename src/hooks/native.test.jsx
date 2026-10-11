@@ -12,7 +12,7 @@ const asNative = (on = true) => vi.spyOn(native, 'isNative').mockReturnValue(on)
 describe('useNativeSync', () => {
   it('programme au montage, à chaque changement de tâches et au retour au premier plan', () => {
     asNative()
-    const sync = vi.spyOn(native, 'syncNative').mockResolvedValue(1)
+    const sync = vi.spyOn(native, 'syncNative').mockResolvedValue({ count: 1, inexact: false })
     let resume
     vi.spyOn(native, 'onResume').mockImplementation((fn) => { resume = fn; return () => {} })
     const t1 = [task({ id: 'a' })]
@@ -24,7 +24,7 @@ describe('useNativeSync', () => {
     expect(sync).toHaveBeenCalledTimes(3)
   })
   it('ne fait rien sur le web ou sans autorisation', () => {
-    const sync = vi.spyOn(native, 'syncNative').mockResolvedValue(1)
+    const sync = vi.spyOn(native, 'syncNative').mockResolvedValue({ count: 1, inexact: false })
     asNative(false)
     renderHook(() => useNativeSync([task()], true))
     asNative(true)
@@ -33,12 +33,12 @@ describe('useNativeSync', () => {
   })
   it('expose le nombre de rappels programmés', async () => {
     asNative()
-    vi.spyOn(native, 'syncNative').mockResolvedValue(12)
+    vi.spyOn(native, 'syncNative').mockResolvedValue({ count: 12, inexact: true })
     vi.spyOn(native, 'onResume').mockReturnValue(() => {})
     const tasks = [task()]
     const { result } = renderHook(() => useNativeSync(tasks, true))
     await act(async () => {})
-    expect(result.current).toEqual({ count: 12, error: '' })
+    expect(result.current).toEqual({ count: 12, inexact: true, error: '' })
   })
   it('expose l’erreur de programmation au lieu de l’avaler', async () => {
     asNative()
@@ -47,7 +47,7 @@ describe('useNativeSync', () => {
     const tasks = [task()]
     const { result } = renderHook(() => useNativeSync(tasks, true))
     await act(async () => {})
-    expect(result.current).toEqual({ count: null, error: 'exact alarm refused' })
+    expect(result.current).toEqual({ count: null, inexact: false, error: 'exact alarm refused' })
   })
 })
 
@@ -104,17 +104,29 @@ describe('SettingsView sur Android', () => {
     setup('granted', 'granted', { count: null, error: 'boom' })
     expect(await screen.findByText(/Rappels programmés : boom/)).toBeInTheDocument()
   })
-  it('test immédiat et test dans 5 secondes', async () => {
+  it('test immédiat et test d’alarme (1 min) avec avertissement si non exacte', async () => {
     vi.spyOn(native, 'nativePermission').mockResolvedValue('granted')
     const now = vi.spyOn(native, 'testNow').mockResolvedValue()
-    const later = vi.spyOn(native, 'testNative').mockResolvedValue()
+    const later = vi.spyOn(native, 'testNative').mockResolvedValue({ inexact: true, at: new Date(2026, 9, 11, 23, 20) })
     const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
     const { user } = setup('granted')
     await user.click(await screen.findByRole('button', { name: /Tester les notifications/ }))
     expect(now).toHaveBeenCalled()
-    await user.click(screen.getByRole('button', { name: 'Tester dans 5 s' }))
+    await user.click(screen.getByRole('button', { name: /Tester une alarme/ }))
     expect(later).toHaveBeenCalled()
-    await vi.waitFor(() => expect(alert).toHaveBeenCalled())
+    await vi.waitFor(() => expect(alert).toHaveBeenCalledWith(expect.stringMatching(/23:20.*non exacte/s)))
+  })
+  it('affiche l’heure du téléphone et l’avertissement « non exacts »', async () => {
+    setup('granted', 'granted', { count: 5, inexact: true, error: '' })
+    expect(await screen.findByText(/Heure de ton téléphone/)).toBeInTheDocument()
+    expect(screen.getByText(/Rappels programmés : 5 \(non exacts\)/)).toBeInTheDocument()
+    expect(screen.getByText(/peut les retarder/)).toBeInTheDocument()
+  })
+  it('une erreur d’alarme de test est affichée', async () => {
+    vi.spyOn(native, 'testNative').mockRejectedValue(new Error('refusée'))
+    const { user } = setup('granted')
+    await user.click(await screen.findByRole('button', { name: /Tester une alarme/ }))
+    expect(await screen.findByText(/Erreur : refusée/)).toBeInTheDocument()
   })
   it('une erreur de test est affichée', async () => {
     vi.spyOn(native, 'nativePermission').mockResolvedValue('granted')

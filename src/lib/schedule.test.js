@@ -23,13 +23,13 @@ describe('buildSchedule', () => {
   it('quotidienne : une notification répétée par le système à l’heure exacte', () => {
     const [n, ...rest] = only(task({ id: 'a', time: '07:05', title: 'Manger', emoji: '🍽️' }))
     expect(rest).toEqual([])
-    expect(n).toMatchObject({ title: '🍽️ Manger', body: 'C’est l’heure ! 07:05', channelId: 'rappels', schedule: { on: { hour: 7, minute: 5 }, allowWhileIdle: true } })
+    expect(n).toMatchObject({ title: '🍽️ Manger', body: 'C’est l’heure ! 07:05', channelId: 'rappels', schedule: { on: { hour: 7, minute: 5, second: 0 }, allowWhileIdle: true } })
     expect(n.extra).toEqual({ taskId: 'a' })
   })
   it('hebdomadaire : une par jour choisi, jours Android (dimanche = 1)', () => {
     const list = only(task({ repeat: 'weekly', days: [0, 3, 6], time: '18:45' }))
     expect(list.map((n) => n.schedule.on)).toEqual([
-      { weekday: 1, hour: 18, minute: 45 }, { weekday: 4, hour: 18, minute: 45 }, { weekday: 7, hour: 18, minute: 45 },
+      { weekday: 1, hour: 18, minute: 45, second: 0 }, { weekday: 4, hour: 18, minute: 45, second: 0 }, { weekday: 7, hour: 18, minute: 45, second: 0 },
     ])
     expect(new Set(list.map((n) => n.id)).size).toBe(3)
   })

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DAYS, EMOJIS, WEEK_ORDER } from '../data/content.js'
 import { isValidTask } from '../lib/tasks.js'
+import TimeSelect from './TimeSelect.jsx'
 
 const REPEAT_LABELS = [['once', 'Une fois'], ['daily', 'Chaque jour'], ['weekly', 'Certains jours']]
 
@@ -22,9 +23,10 @@ export default function TaskEditor({ task, onSave, onDelete, onClose }) {
         <div className="emojis" role="group" aria-label="Icône">
           {EMOJIS.map((e) => <button type="button" key={e} aria-pressed={t.emoji === e} className={t.emoji === e ? 'sel' : ''} onClick={() => set({ emoji: e })}>{e}</button>)}
         </div>
-        <label>Heure exacte
-          <input type="time" value={t.time} onChange={(e) => set({ time: e.target.value })} required />
-        </label>
+        <div className="field">
+          <span className="field-label">Heure exacte (24 h)</span>
+          <TimeSelect value={t.time} onChange={(time) => set({ time })} />
+        </div>
         <div className="seg" role="group" aria-label="Répétition">
           {REPEAT_LABELS.map(([v, l]) => <button type="button" key={v} aria-pressed={t.repeat === v} className={t.repeat === v ? 'sel' : ''} onClick={() => set({ repeat: v })}>{l}</button>)}
         </div>

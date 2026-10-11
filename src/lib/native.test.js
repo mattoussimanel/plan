@@ -56,13 +56,13 @@ describe('native', () => {
       .mockResolvedValueOnce({ notifications: [{ id: 1, title: 'old' }, { id: 2 }] })
       .mockResolvedValueOnce({ notifications: [{ id: 9 }] })
     const n = await syncNative([task({ id: 'a' })], NOW)
-    expect(n).toBe(1) // nombre réellement en attente côté système
+    expect(n).toEqual({ count: 1, inexact: false }) // nombre réellement en attente côté système
     expect(LocalNotifications.cancel).toHaveBeenCalledWith({ notifications: [{ id: 1 }, { id: 2 }] })
     expect(LocalNotifications.createChannel).toHaveBeenCalledWith(expect.objectContaining({ id: 'rappels', importance: 5, vibration: true }))
-    expect(LocalNotifications.schedule).toHaveBeenCalledWith({ notifications: [expect.objectContaining({ channelId: 'rappels', schedule: expect.objectContaining({ on: { hour: 9, minute: 0 } }) })] })
+    expect(LocalNotifications.schedule).toHaveBeenCalledWith({ notifications: [expect.objectContaining({ channelId: 'rappels', schedule: expect.objectContaining({ on: { hour: 9, minute: 0, second: 0 } }) })] })
   })
   it('syncNative sans rien à programmer : n’appelle pas schedule ni cancel', async () => {
-    expect(await syncNative([], NOW)).toBe(0)
+    expect(await syncNative([], NOW)).toEqual({ count: 0, inexact: false })
     expect(LocalNotifications.cancel).not.toHaveBeenCalled()
     expect(LocalNotifications.schedule).not.toHaveBeenCalled()
   })
@@ -82,11 +82,21 @@ describe('native', () => {
     expect(n.schedule).toBeUndefined()
     expect(n.channelId).toBe('rappels')
   })
-  it('testNative programme une notification dans 5 secondes', async () => {
+  it('syncNative signale une programmation non exacte', async () => {
+    LocalNotifications.getPending.mockResolvedValue({ notifications: [{ id: 1 }] })
+    LocalNotifications.schedule.mockResolvedValueOnce({ warning: { code: 'OS-PLUG-LNOT-0001' } })
+    expect(await syncNative([task()], NOW)).toEqual({ count: 1, inexact: true })
+  })
+  it('testNative programme une alarme dans 1 minute et signale l’inexactitude', async () => {
     const before = Date.now()
-    await testNative()
+    LocalNotifications.schedule.mockResolvedValueOnce({ warning: {} })
+    const { inexact, at } = await testNative()
     const [{ notifications: [n] }] = LocalNotifications.schedule.mock.calls[0]
-    expect(n.schedule.at.getTime() - before).toBeGreaterThanOrEqual(4900)
+    expect(n.schedule.at.getTime() - before).toBeGreaterThanOrEqual(59900)
+    expect(at).toBe(n.schedule.at)
+    expect(inexact).toBe(true)
+    LocalNotifications.schedule.mockResolvedValueOnce({})
+    expect((await testNative(1000)).inexact).toBe(false)
   })
 
   it('bouton retour : quitte seulement si non géré, et se désabonne', async () => {
