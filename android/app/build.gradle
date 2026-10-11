@@ -30,6 +30,9 @@ android {
         }
     }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.release // même clé : debug et release se mettent à jour l'un par-dessus l'autre
+        }
         release {
             signingConfig signingConfigs.release
             minifyEnabled false

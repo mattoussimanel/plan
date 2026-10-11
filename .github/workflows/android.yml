@@ -30,23 +30,27 @@ jobs:
           npx cap sync android
       - name: Accept Android SDK licenses
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
-      - name: Build signed release APK
+      - name: Build debug and release APKs
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon
-      - name: Verify signature and name the APK
+        run: ./gradlew assembleDebug assembleRelease --no-daemon
+      - name: Verify signatures and name the APKs
         run: |
-          APK=android/app/build/outputs/apk/release/app-release.apk
-          "$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)apksigner" verify --print-certs "$APK"
-          cp "$APK" Ma-Journee-Rosee.apk
+          BT="$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)"
+          OUT=android/app/build/outputs/apk
+          "${BT}apksigner" verify --print-certs "$OUT/release/app-release.apk"
+          "${BT}apksigner" verify --print-certs "$OUT/debug/app-debug.apk"
+          mkdir apks
+          cp "$OUT/release/app-release.apk" apks/Ma-Journee-Rosee-release.apk
+          cp "$OUT/debug/app-debug.apk" apks/Ma-Journee-Rosee-debug.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Ma-Journee-Rosee-apk
-          path: Ma-Journee-Rosee.apk
-      - name: Publish APK as a GitHub release (download link for the phone)
+          name: Ma-Journee-Rosee-apks
+          path: apks/*.apk
+      - name: Publish a GitHub release with the APKs
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete apk-latest --cleanup-tag --yes || true
-          gh release create apk-latest Ma-Journee-Rosee.apk --target "$GITHUB_SHA" \
-            --title "Ma Journée Rosée (APK Android)" \
-            --notes "Dernier build de l'application Android. Télécharge Ma-Journee-Rosee.apk sur ton téléphone et installe-le (autoriser les sources inconnues)."
+          TAG="v1.0.${{ github.run_number }}"
+          gh release create "$TAG" apks/*.apk --target "$GITHUB_SHA" --latest \
+            --title "Ma Journée Rosée $TAG" \
+            --notes "APK Android : **release** (recommandé, optimisé) et **debug**. Télécharge un fichier .apk sur le téléphone et installe-le (autoriser les sources inconnues). Les deux sont signés avec la même clé : tu peux passer de l'un à l'autre en les installant par-dessus."
