@@ -22,7 +22,7 @@ export default function App() {
   const [tab, setTab] = useState('today')
   const [editing, setEditing] = useState(null)
   const [burst, fireConfetti] = useConfetti()
-  const { banner, dismiss, perm, enable, check } = useReminders(stateRef)
+  const { banner, dismiss, perm, setPerm, enable, check } = useReminders(stateRef)
   const now = useNow(check)
 
   const nativeStatus = useNativeSync(state.tasks, perm === 'granted')
@@ -58,10 +58,10 @@ export default function App() {
       <main className="app">
         {tab === 'today' && (
           <TodayView state={state} dispatch={dispatch} now={now} today={key} list={list} prog={prog} next={next}
-            perm={perm} onEnableNotifs={enable} onToggle={toggle} onEdit={setEditing} />
+            perm={perm} onEnableNotifs={enable} onPermission={setPerm} onToggle={toggle} onEdit={setEditing} />
         )}
         {tab === 'tasks' && <TasksView tasks={state.tasks} onEdit={setEditing} />}
-        {tab === 'me' && <SettingsView state={state} dispatch={dispatch} now={now} perm={perm} onEnableNotifs={enable} nativeStatus={nativeStatus} />}
+        {tab === 'me' && <SettingsView state={state} dispatch={dispatch} now={now} perm={perm} onEnableNotifs={enable} onPermission={setPerm} nativeStatus={nativeStatus} />}
       </main>
       <button className="fab" aria-label="Ajouter une tâche" onClick={() => setEditing(newTaskDraft(key))}>＋</button>
       <TabBar tab={tab} onChange={setTab} />

@@ -3,8 +3,9 @@ import { greeting } from '../lib/messages.js'
 import { streak } from '../lib/progress.js'
 import Ring from './Ring.jsx'
 import Timeline from './Timeline.jsx'
+import TestNotificationButton from './TestNotificationButton.jsx'
 
-export default function TodayView({ state, dispatch, now, today, list, prog, next, perm, onEnableNotifs, onToggle, onEdit }) {
+export default function TodayView({ state, dispatch, now, today, list, prog, next, perm, onEnableNotifs, onPermission, onToggle, onEdit }) {
   const water = state.water[today] || 0
   const allDone = prog.total > 0 && prog.done === prog.total
   const dateLabel = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -46,6 +47,7 @@ export default function TodayView({ state, dispatch, now, today, list, prog, nex
         {perm !== 'granted' && perm !== 'unsupported' && (
           <button className="card notif-cta" onClick={onEnableNotifs}>🔔 Active les notifications pour être rappelée à chaque tâche</button>
         )}
+        <TestNotificationButton className="card notif-cta" onPermission={onPermission} />
         <Timeline list={list} doneIds={state.done[today] || []} name={state.name} now={now} onToggle={onToggle} onEdit={onEdit} />
       </section>
     </div>

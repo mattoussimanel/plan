@@ -3,8 +3,9 @@ import { weekStats, totalDone } from '../lib/progress.js'
 import { buildICS } from '../lib/ics.js'
 import { download } from '../lib/download.js'
 import { showNotification } from '../lib/notifications.js'
-import { appVersion, exactAlarmStatus, isNative, requestExactAlarm, shareText, testNative, testNow } from '../lib/native.js'
+import { appVersion, exactAlarmStatus, isNative, requestExactAlarm, shareText, testNative } from '../lib/native.js'
 import { useEffect, useState } from 'react'
+import TestNotificationButton from './TestNotificationButton.jsx'
 
 function Bars({ week }) {
   return (
@@ -14,7 +15,7 @@ function Bars({ week }) {
   )
 }
 
-function NativeNotifications({ perm, onEnableNotifs, status }) {
+function NativeNotifications({ perm, onEnableNotifs, status, onPermission }) {
   const [exact, setExact] = useState('granted')
   const [testError, setTestError] = useState('')
   const [version, setVersion] = useState('')
@@ -35,7 +36,7 @@ function NativeNotifications({ perm, onEnableNotifs, status }) {
       <div className="actions left">
         {(perm === 'default' || perm === 'unsupported') && <button className="btn" onClick={onEnableNotifs}>Autoriser</button>}
         {exact === 'denied' && <button className="btn" onClick={() => requestExactAlarm().then(setExact)}>Alarmes exactes</button>}
-        {perm === 'granted' && <button className="btn" onClick={() => run(testNow)}>Tester maintenant</button>}
+        <TestNotificationButton onPermission={onPermission} />
         {perm === 'granted' && <button className="btn ghost" onClick={() => run(testNative, 'Notification dans 5 secondes : ferme l’appli pour essayer !')}>Tester dans 5 s</button>}
       </div>
       <p className="hint">Version installée : {version || '…'}</p>
@@ -44,7 +45,7 @@ function NativeNotifications({ perm, onEnableNotifs, status }) {
   )
 }
 
-export default function SettingsView({ state, dispatch, now, perm, onEnableNotifs, nativeStatus = { count: null, error: '' } }) {
+export default function SettingsView({ state, dispatch, now, perm, onEnableNotifs, onPermission, nativeStatus = { count: null, error: '' } }) {
   const native = isNative()
   const importBackup = (file) => {
     const fr = new FileReader()
@@ -72,7 +73,7 @@ export default function SettingsView({ state, dispatch, now, perm, onEnableNotif
         <h3>📊 Ma semaine <small>{totalDone(state)} tâches accomplies au total</small></h3>
         <Bars week={weekStats(state, now)} />
       </div>
-      {native ? <NativeNotifications perm={perm} onEnableNotifs={onEnableNotifs} status={nativeStatus} /> : (
+      {native ? <NativeNotifications perm={perm} onEnableNotifs={onEnableNotifs} status={nativeStatus} onPermission={onPermission} /> : (
       <div className="card">
         <h3>🔔 Notifications</h3>
         {perm === 'unsupported' && <p className="hint">Ton navigateur ne supporte pas les notifications. Sur iPhone, ajoute d’abord l’app à l’écran d’accueil.</p>}

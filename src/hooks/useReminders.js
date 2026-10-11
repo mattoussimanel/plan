@@ -35,5 +35,5 @@ export function useReminders(stateRef) {
     if (p === 'granted' && !isNative()) showNotification('Notifications activées 💖', 'Tu recevras un rappel à chaque tâche.', 'welcome')
   }, [])
 
-  return { banner, dismiss: () => setBanner(null), perm, enable, check }
+  return { banner, dismiss: () => setBanner(null), perm, setPerm, enable, check }
 }
