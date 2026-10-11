@@ -1,0 +1,11 @@
+.app { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 18px) 16px 150px; }
+.grid { display: grid; gap: 14px; }
+.main-col, .narrow { display: flex; flex-direction: column; gap: 14px; }
+.side { display: contents; }
+.hero { order: 1; } .mini { order: 2; } .main-col { order: 3; } .extra { order: 4; }
+.narrow { max-width: 600px; margin: 0 auto; animation: pop .5s both; }
+.card { background: var(--card); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 22px; padding: 16px; box-shadow: var(--shadow); border: 1px solid rgba(255, 255, 255, .7); animation: pop .55s both; }
+@keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+.card h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 1.02rem; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.empty { text-align: center; color: var(--muted); padding: 40px 0; }

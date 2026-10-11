@@ -1,0 +1,9 @@
+/* fond animé */
+.bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .5; background: var(--main2); animation: blob 16s ease-in-out infinite; }
+.b1 { width: 320px; height: 320px; top: -80px; left: -60px; }
+.b2 { width: 280px; height: 280px; bottom: 10%; right: -80px; background: var(--main); opacity: .3; animation-delay: -5s; }
+.b3 { width: 220px; height: 220px; top: 45%; left: 30%; opacity: .25; animation-delay: -9s; }
+@keyframes blob { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(40px, -50px) scale(1.2); } }
+.float { position: absolute; bottom: -50px; opacity: .55; animation: rise linear infinite; }
+@keyframes rise { 0% { transform: translateY(0) rotate(0) scale(.8); opacity: 0; } 15% { opacity: .6; } 100% { transform: translateY(-115vh) rotate(360deg) scale(1.1); opacity: 0; } }

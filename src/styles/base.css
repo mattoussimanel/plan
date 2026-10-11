@@ -1,0 +1,19 @@
+:root {
+  --bg1: #fff0f6; --bg2: #ffd6e8; --main: #ff5fa2; --main2: #ff9ec9; --soft: #ffe3ef;
+  --text: #5a2742; --muted: #a0698a; --card: rgba(255, 255, 255, .78); --shadow: 0 10px 30px rgba(255, 95, 162, .18);
+}
+[data-theme='peche'] { --bg1: #fff4ec; --bg2: #ffd9c2; --main: #ff7a59; --main2: #ffb59c; --soft: #ffe6da; --text: #5c2f22; --muted: #a56c5a; --shadow: 0 10px 30px rgba(255, 122, 89, .2); }
+[data-theme='lilas'] { --bg1: #f6f0ff; --bg2: #e1d2ff; --main: #a66cff; --main2: #cdb0ff; --soft: #ece1ff; --text: #3f2a63; --muted: #84709f; --shadow: 0 10px 30px rgba(166, 108, 255, .2); }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, 'Nunito', sans-serif; color: var(--text);
+  background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg1)); background-size: 300% 300%;
+  animation: shift 14s ease infinite; min-height: 100vh; overflow-x: hidden;
+}
+@keyframes shift { 0%, 100% { background-position: 0 50%; } 50% { background-position: 100% 50%; } }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; }
+h1, h2, h3 { margin: 0; }
+small { color: var(--muted); }

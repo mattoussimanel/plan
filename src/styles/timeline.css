@@ -1,0 +1,21 @@
+/* timeline */
+.timeline { list-style: none; margin: 0; padding: 0; position: relative; }
+.timeline::before { content: ''; position: absolute; left: 62px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(var(--main2), var(--main), var(--main2)); background-size: 100% 200%; animation: flow 4s linear infinite; opacity: .55; }
+@keyframes flow { to { background-position: 0 200%; } }
+.tl-item { display: grid; grid-template-columns: 50px 26px 1fr; gap: 10px; align-items: start; margin-bottom: 14px; animation: pop .6s both; animation-delay: calc(var(--i) * .07s); }
+.tl-time { font-weight: 700; font-size: .92rem; padding-top: 14px; text-align: right; }
+.tl-dot { position: relative; z-index: 1; width: 40px; height: 40px; margin: 4px 0 0 -7px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: var(--shadow); font-size: 1.1rem; border: 3px solid var(--main2); }
+.tl-item.next .tl-dot { border-color: var(--main); animation: pulse 1.6s infinite; }
+.tl-item.done .tl-dot { background: var(--main); color: #fff; border-color: var(--main); }
+.tl-item.late:not(.done) .tl-dot { opacity: .6; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 95, 162, .6); } 100% { box-shadow: 0 0 0 16px rgba(255, 95, 162, 0); } }
+.tl-card { cursor: pointer; padding: 14px; margin-left: 12px; transition: transform .2s; }
+.tl-card:active { transform: scale(.98); }
+.tl-item.next .tl-card { border: 2px solid var(--main2); }
+.tl-item.done .tl-card h3 { text-decoration: line-through; opacity: .55; }
+.tl-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tl-head h3 { display: block; font-size: 1rem; }
+.check { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 2.5px solid var(--main2); background: #fff; color: #fff; font-weight: 800; transition: .25s; }
+.check.on { background: linear-gradient(135deg, var(--main2), var(--main)); border-color: var(--main); transform: scale(1.1) rotate(360deg); }
+.msg { margin: 10px 0 0; padding: 10px 12px; background: var(--soft); border-radius: 14px; line-height: 1.45; font-size: .93rem; }
+.quote { font-style: italic; } .quote span { display: block; font-style: normal; color: var(--muted); margin-top: 4px; font-size: .85rem; }

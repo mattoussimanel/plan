@@ -1,0 +1,9 @@
+@media (min-width: 860px) {
+  .grid { grid-template-columns: 340px 1fr; align-items: start; gap: 28px; }
+  .side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 24px; }
+  .hero, .mini, .main-col, .extra { order: 0; }
+  .app { padding-top: 32px; }
+  .hero { flex-direction: column-reverse; text-align: center; }
+  .tabs { width: 380px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }

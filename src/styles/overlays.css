@@ -1,0 +1,8 @@
+/* alerte + confettis */
+.banner { position: fixed; z-index: 60; top: calc(env(safe-area-inset-top) + 10px); left: 50%; transform: translateX(-50%); width: min(92vw, 460px); display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 20px; background: #fff; border: 2px solid var(--main); box-shadow: var(--shadow); animation: drop-in .5s cubic-bezier(.2, 1.4, .4, 1); cursor: pointer; }
+@keyframes drop-in { from { transform: translate(-50%, -140%); } }
+.bell { font-size: 1.8rem; animation: ring .8s infinite; transform-origin: top center; }
+@keyframes ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(18deg); } 75% { transform: rotate(-18deg); } }
+.confetti { position: fixed; inset: 0; z-index: 70; pointer-events: none; }
+.confetti span { position: fixed; font-size: 1.4rem; animation: burst 1.5s ease-out forwards; }
+@keyframes burst { to { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: 0; } }

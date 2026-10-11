@@ -1,0 +1,18 @@
+/* hero */
+.hero { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: linear-gradient(135deg, rgba(255,255,255,.9), var(--soft)); }
+.hero h1 { font-size: 1.6rem; background: linear-gradient(90deg, var(--main), var(--main2), var(--main)); background-size: 200%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shift 6s linear infinite; }
+.date { margin: 0; text-transform: capitalize; color: var(--muted); font-size: .9rem; }
+.ring { position: relative; width: 92px; height: 92px; flex: none; }
+.ring svg { transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 10; }
+.ring-bg { stroke: var(--soft); }
+.ring-fg { stroke: url(#rg); stroke-linecap: round; transition: stroke-dashoffset .8s cubic-bezier(.3, 1.3, .5, 1); }
+.ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 1.15rem; }
+.mini { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stat { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.stat span { font-size: 1.6rem; animation: beat 1.6s infinite; }
+.stat b { font-size: 1.4rem; }
+@keyframes beat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } }
+
+.notif-cta { color: var(--text); font-weight: 600; text-align: left; animation: pop .5s both, wiggle 3s 1s infinite; }
+@keyframes wiggle { 0%, 90%, 100% { transform: rotate(0); } 93% { transform: rotate(-1.5deg); } 96% { transform: rotate(1.5deg); } }
