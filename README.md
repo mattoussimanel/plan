@@ -24,7 +24,7 @@ Les rappels sont des **notifications locales exactes** programmées par Android 
 
 - À chaque push sur `main`, le workflow *Build Android APK* teste, construit et signe l'APK, puis le publie :
   - dans l'onglet **Releases** du dépôt (un tag `v1.0.N` par build) avec deux fichiers : `Ma-Journee-Rosee-release.apk` (recommandé) et `Ma-Journee-Rosee-debug.apk` ;
-  - en artefact du run (onglet Actions).
+  (télécharge-les depuis **Releases** : les « artefacts » de l'onglet Actions sont toujours zippés par GitHub, il n'y en a donc plus).
 - Installation : ouvrir le fichier APK sur le téléphone, autoriser « sources inconnues », puis accepter les notifications au premier lancement.
 - Build local (JDK 21 + Android SDK) : `npm run build && npx cap sync android && cd android && ./gradlew assembleRelease`.
 - Icônes/écran de démarrage : `node scripts/android-assets.mjs`.

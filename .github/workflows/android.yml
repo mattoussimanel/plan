@@ -42,10 +42,6 @@ jobs:
           mkdir apks
           cp "$OUT/release/app-release.apk" apks/Ma-Journee-Rosee-release.apk
           cp "$OUT/debug/app-debug.apk" apks/Ma-Journee-Rosee-debug.apk
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Ma-Journee-Rosee-apks
-          path: apks/*.apk
       - name: Publish a GitHub release with the APKs
         env:
           GH_TOKEN: ${{ github.token }}
