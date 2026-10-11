@@ -26,6 +26,16 @@ describe('normalizeState', () => {
   })
 })
 
+describe('cycle dans l’état', () => {
+  it('toujours présent et nettoyé', () => {
+    expect(initialState().cycle.reminders).toHaveLength(2)
+    const s = normalizeState({ cycle: { cycleLength: 99, periods: [{ start: '2026-10-18' }, { start: 'x' }] } })
+    expect(s.cycle.cycleLength).toBe(45)
+    expect(s.cycle.periods).toEqual([{ start: '2026-10-18', end: null }])
+    expect(normalizeState({}).cycle).toEqual(initialState().cycle)
+  })
+})
+
 describe('loadState / saveState', () => {
   it('charge l’état par défaut si rien n’est stocké', () => expect(loadState(memoryStorage())).toEqual(initialState()))
   it('ne plante pas sur du JSON corrompu', () => expect(loadState(memoryStorage({ [STATE_KEY]: '{oops' }))).toEqual(initialState()))

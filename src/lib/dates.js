@@ -29,3 +29,12 @@ export function addDays(d, n) {
 
 export const isValidKey = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || '') && !Number.isNaN(parseKey(s).getTime())
 export const isValidTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(s || '')
+
+const keyToUTC = (key) => { const [y, m, d] = key.split('-').map(Number); return Date.UTC(y, m - 1, d) }
+/** Nombre de jours entre deux clés « AAAA-MM-JJ » (a − b), insensible à l'heure d'été */
+export const diffDays = (a, b) => Math.round((keyToUTC(a) - keyToUTC(b)) / 86400000)
+/** Clé du jour décalée de n jours */
+export function addDaysKey(key, n) {
+  const t = new Date(keyToUTC(key) + n * 86400000)
+  return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`
+}

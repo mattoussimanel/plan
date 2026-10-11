@@ -1,0 +1,30 @@
+/* cycle féminin */
+.cycle-hero h2 { font-size: 1.25rem; }
+.phase-chip { display: inline-block; margin: 8px 0 0; padding: 4px 12px; border-radius: 999px; background: var(--soft); color: var(--main); font-weight: 700; font-size: .85rem; }
+.cycle-facts { list-style: none; margin: 10px 0 0; padding: 0; line-height: 1.7; font-size: .95rem; }
+.cycle-today { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; color: inherit; }
+.cycle-today > span { font-size: 1.8rem; animation: beat 2.4s infinite; }
+.cycle-today > div { display: flex; flex-direction: column; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal-head h3 { text-transform: capitalize; }
+.icon-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--soft); font-size: 1.3rem; color: var(--main); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.cal-h { font-size: .75rem; color: var(--muted); padding: 4px 0; }
+.cal-day { position: relative; aspect-ratio: 1; border-radius: 50%; font-weight: 600; background: transparent; transition: transform .15s; }
+.cal-day:active { transform: scale(.9); }
+.cal-day.period { background: #ff4f9a; color: #fff; }
+.cal-day.period-pred { background: repeating-linear-gradient(45deg, #ffd0e4, #ffd0e4 4px, #ffe6f0 4px, #ffe6f0 8px); border: 2px dashed #ff9ec9; }
+.cal-day.fertile { background: #d8f5e4; color: #1f7a4d; }
+.cal-day.ovulation { background: #7bd9a6; color: #0f4d2e; }
+.cal-day.today { outline: 3px solid var(--main); outline-offset: 1px; }
+.cal-day.logged::after { content: ''; position: absolute; bottom: 4px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--text); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 10px 0 0; font-size: .8rem; color: var(--muted); }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+.dot.period { background: #ff4f9a; } .dot.period-pred { background: #ffd0e4; border: 2px dashed #ff9ec9; } .dot.fertile { background: #d8f5e4; border: 1px solid #1f7a4d; } .dot.ovulation { background: #7bd9a6; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chips button { padding: 8px 12px; border-radius: 999px; background: #fff; border: 2px solid var(--soft); font-size: .88rem; font-weight: 600; }
+.mt { margin-top: 16px; }
+.history { list-style: none; margin: 8px 0 0; padding: 0; }
+.history li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--soft); }
+select { width: 100%; margin-top: 6px; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--soft); background: #fff; outline: none; font: inherit; color: inherit; }
+.time24 select { margin-top: 0; }

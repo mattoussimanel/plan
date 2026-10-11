@@ -3,9 +3,10 @@ import { greeting } from '../lib/messages.js'
 import { streak } from '../lib/progress.js'
 import Ring from './Ring.jsx'
 import Timeline from './Timeline.jsx'
-import TestNotificationButton from './TestNotificationButton.jsx'
+import CycleToday from './cycle/CycleToday.jsx'
+import { summary as cycleSummary } from '../lib/cycle.js'
 
-export default function TodayView({ state, dispatch, now, today, list, prog, next, perm, onEnableNotifs, onPermission, onToggle, onEdit }) {
+export default function TodayView({ state, dispatch, now, today, list, prog, next, perm, onEnableNotifs, onToggle, onEdit, onOpenCycle }) {
   const water = state.water[today] || 0
   const allDone = prog.total > 0 && prog.done === prog.total
   const dateLabel = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -27,6 +28,7 @@ export default function TodayView({ state, dispatch, now, today, list, prog, nex
           <div className="card stat"><span>🔥</span><b>{streak(state, now)}</b><small>jours de suite</small></div>
           <div className="card stat"><span>✅</span><b>{prog.done}/{prog.total}</b><small>aujourd’hui</small></div>
         </div>
+        <div className="extra"><CycleToday summary={cycleSummary(state.cycle, today)} onOpen={onOpenCycle} /></div>
         <section className="card extra">
           <h3>💧 Eau <small>{water}/{GLASSES} verres</small></h3>
           <div className="glasses">
@@ -47,7 +49,6 @@ export default function TodayView({ state, dispatch, now, today, list, prog, nex
         {perm !== 'granted' && perm !== 'unsupported' && (
           <button className="card notif-cta" onClick={onEnableNotifs}>🔔 Active les notifications pour être rappelée à chaque tâche</button>
         )}
-        <TestNotificationButton className="card notif-cta" onPermission={onPermission} />
         <Timeline list={list} doneIds={state.done[today] || []} name={state.name} now={now} onToggle={onToggle} onEdit={onEdit} />
       </section>
     </div>

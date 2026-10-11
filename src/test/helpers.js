@@ -1,10 +1,11 @@
 import { DEFAULT_TASKS } from '../data/content.js'
+import { defaultCycle } from '../lib/cycle.js'
 
 export const task = (over = {}) => ({
   id: 'x1', emoji: '🌸', title: 'Test', time: '09:00', repeat: 'daily', days: [], date: '', notify: true, ...over,
 })
 
-export const makeState = (over = {}) => ({ name: '', theme: 'rose', tasks: DEFAULT_TASKS, done: {}, water: {}, mood: {}, ...over })
+export const makeState = (over = {}) => ({ name: '', theme: 'rose', tasks: DEFAULT_TASKS, done: {}, water: {}, mood: {}, cycle: defaultCycle(), ...over })
 
 // Dimanche 11 octobre 2026, 08:30 (heure locale)
 export const SUNDAY = new Date(2026, 9, 11, 8, 30, 0)

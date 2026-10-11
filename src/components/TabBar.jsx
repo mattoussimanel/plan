@@ -1,4 +1,4 @@
-export const TABS = [['today', '🌸', 'Aujourd’hui'], ['tasks', '🎀', 'Tâches'], ['me', '💕', 'Moi']]
+export const TABS = [['today', '🌸', 'Aujourd’hui'], ['tasks', '🎀', 'Tâches'], ['cycle', '🌙', 'Cycle'], ['me', '💕', 'Moi']]
 
 export default function TabBar({ tab, onChange }) {
   return (

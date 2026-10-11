@@ -1,11 +1,12 @@
 import { DEFAULT_TASKS } from '../data/content.js'
 import { addDays, dateKey, isValidKey } from './dates.js'
 import { sanitizeTask } from './tasks.js'
+import { defaultCycle, normalizeCycle } from './cycle.js'
 
 export const STATE_KEY = 'ma-journee-state-v1'
 const KEEP_DAYS = 120
 
-export const initialState = () => ({ name: '', theme: 'rose', tasks: DEFAULT_TASKS, done: {}, water: {}, mood: {} })
+export const initialState = () => ({ name: '', theme: 'rose', tasks: DEFAULT_TASKS, done: {}, water: {}, mood: {}, cycle: defaultCycle() })
 
 const pickByDay = (obj, keep) => Object.fromEntries(Object.entries(obj && typeof obj === 'object' ? obj : {}).filter(([k, v]) => isValidKey(k) && keep(v)))
 
@@ -22,6 +23,7 @@ export function normalizeState(raw) {
     done: pickByDay(raw.done, Array.isArray),
     water: pickByDay(raw.water, Number.isInteger),
     mood: pickByDay(raw.mood, (v) => typeof v === 'string'),
+    cycle: normalizeCycle(raw.cycle),
   }
 }
 

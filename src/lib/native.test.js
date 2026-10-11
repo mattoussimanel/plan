@@ -4,6 +4,7 @@ import { App } from '@capacitor/app'
 import { Share } from '@capacitor/share'
 import { appVersion, exactAlarmStatus, isNative, nativePermission, onBackButton, onResume, requestExactAlarm, requestNativePermission, shareText, syncNative, testNative, testNow } from './native.js'
 import { task } from '../test/helpers.js'
+import { defaultCycle } from './cycle.js'
 
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: vi.fn(() => false) } }))
 vi.mock('@capacitor/local-notifications', () => ({
@@ -60,6 +61,15 @@ describe('native', () => {
     expect(LocalNotifications.cancel).toHaveBeenCalledWith({ notifications: [{ id: 1 }, { id: 2 }] })
     expect(LocalNotifications.createChannel).toHaveBeenCalledWith(expect.objectContaining({ id: 'rappels', importance: 5, vibration: true }))
     expect(LocalNotifications.schedule).toHaveBeenCalledWith({ notifications: [expect.objectContaining({ channelId: 'rappels', schedule: expect.objectContaining({ on: { hour: 9, minute: 0, second: 0 } }) })] })
+  })
+  it('syncNative programme aussi les rappels du cycle (X jours avant)', async () => {
+    LocalNotifications.getPending.mockResolvedValue({ notifications: [] })
+    const cycle = { ...defaultCycle(), periods: [{ start: '2026-10-01', end: null }] }
+    await syncNative([], NOW, cycle)
+    const [{ notifications }] = LocalNotifications.schedule.mock.calls[0]
+    expect(notifications.length).toBeGreaterThan(0)
+    expect(notifications.every((n) => n.extra.cycleReminder && n.schedule.at instanceof Date)).toBe(true)
+    expect(notifications[0].title).toMatch(/Ovulation|Mes règles/)
   })
   it('syncNative sans rien à programmer : n’appelle pas schedule ni cancel', async () => {
     expect(await syncNative([], NOW)).toEqual({ count: 0, inexact: false })

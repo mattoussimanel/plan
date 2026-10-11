@@ -52,3 +52,51 @@ describe('reducer', () => {
     expect(() => reducer(frozen, { type: 'toggleDone', key: K, id: 'a' })).not.toThrow()
   })
 })
+
+describe('reducer : cycle', () => {
+  const st = () => makeState()
+  it('startPeriod ajoute (triée, sans doublon)', () => {
+    let s = reducer(st(), { type: 'startPeriod', date: '2026-10-18' })
+    s = reducer(s, { type: 'startPeriod', date: '2026-09-20' })
+    expect(s.cycle.periods.map((p) => p.start)).toEqual(['2026-09-20', '2026-10-18'])
+    expect(reducer(s, { type: 'startPeriod', date: '2026-10-18' })).toBe(s)
+  })
+  it('endPeriod termine la dernière période commencée avant la date', () => {
+    let s = reducer(st(), { type: 'startPeriod', date: '2026-10-18' })
+    s = reducer(s, { type: 'endPeriod', date: '2026-10-22' })
+    expect(s.cycle.periods[0]).toEqual({ start: '2026-10-18', end: '2026-10-22' })
+  })
+  it('endPeriod ignoré sans période, avant le début ou si trop long', () => {
+    const base = st()
+    expect(reducer(base, { type: 'endPeriod', date: '2026-10-22' })).toBe(base)
+    const s = reducer(base, { type: 'startPeriod', date: '2026-10-18' })
+    expect(reducer(s, { type: 'endPeriod', date: '2026-10-10' })).toBe(s)
+    expect(reducer(s, { type: 'endPeriod', date: '2026-11-30' })).toBe(s)
+  })
+  it('deletePeriod', () => {
+    let s = reducer(st(), { type: 'startPeriod', date: '2026-10-18' })
+    s = reducer(s, { type: 'deletePeriod', start: '2026-10-18' })
+    expect(s.cycle.periods).toEqual([])
+  })
+  it('setCycleDay fusionne, nettoie et supprime l’entrée vide', () => {
+    let s = reducer(st(), { type: 'setCycleDay', key: K, patch: { flow: 'heavy' } })
+    s = reducer(s, { type: 'setCycleDay', key: K, patch: { symptoms: ['cramps', 'bidon'], note: 'dur' } })
+    expect(s.cycle.days[K]).toEqual({ flow: 'heavy', symptoms: ['cramps'], note: 'dur' })
+    s = reducer(s, { type: 'setCycleDay', key: K, patch: { flow: undefined, symptoms: [], note: '' } })
+    expect(s.cycle.days[K]).toBeUndefined()
+  })
+  it('cycleSettings borne les valeurs', () => {
+    const s = reducer(st(), { type: 'cycleSettings', patch: { cycleLength: 31, periodLength: 99 } })
+    expect(s.cycle).toMatchObject({ cycleLength: 31, periodLength: 10, lutealLength: 14 })
+  })
+  it('saveReminder ajoute / modifie, deleteReminder supprime, rappel invalide ignoré', () => {
+    const r = { id: 'n1', event: 'fertile', daysBefore: 3, time: '08:15', enabled: true }
+    let s = reducer(st(), { type: 'saveReminder', reminder: r })
+    expect(s.cycle.reminders.at(-1)).toEqual(r)
+    s = reducer(s, { type: 'saveReminder', reminder: { ...r, daysBefore: 5 } })
+    expect(s.cycle.reminders.filter((x) => x.id === 'n1')).toEqual([{ ...r, daysBefore: 5 }])
+    expect(reducer(s, { type: 'saveReminder', reminder: { id: 'x', event: 'zzz', time: '08:00' } })).toBe(s)
+    s = reducer(s, { type: 'deleteReminder', id: 'n1' })
+    expect(s.cycle.reminders.some((x) => x.id === 'n1')).toBe(false)
+  })
+})

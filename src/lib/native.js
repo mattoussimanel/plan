@@ -4,6 +4,7 @@ import { LocalNotifications } from '@capacitor/local-notifications'
 import { App } from '@capacitor/app'
 import { Share } from '@capacitor/share'
 import { CHANNEL_ID, buildSchedule } from './schedule.js'
+import { buildCycleSchedule } from './cycle.js'
 
 export const isNative = () => Capacitor.isNativePlatform()
 
@@ -28,7 +29,7 @@ export async function requestExactAlarm() {
 let queue = Promise.resolve()
 
 /** Remplace toutes les notifications programmées par celles correspondant aux tâches. Appels sérialisés. */
-export function syncNative(tasks, now = new Date()) {
+export function syncNative(tasks, now = new Date(), cycle) {
   queue = queue.catch(() => {}).then(async () => {
     const { notifications: pending } = await LocalNotifications.getPending()
     if (pending.length) await LocalNotifications.cancel({ notifications: pending.map(({ id }) => ({ id })) })
@@ -36,7 +37,7 @@ export function syncNative(tasks, now = new Date()) {
       id: CHANNEL_ID, name: 'Rappels de tâches', description: 'Notifications à l’heure exacte de chaque tâche',
       importance: 5, visibility: 1, vibration: true, lights: true, lightColor: '#FF5FA2',
     })
-    const list = buildSchedule(tasks, now)
+    const list = [...buildSchedule(tasks, now), ...(cycle ? buildCycleSchedule(cycle, now) : [])]
     const result = list.length ? await LocalNotifications.schedule({ notifications: list }) : {}
     // on renvoie ce que le système a réellement en attente (et non ce qu'on a demandé)
     // et l'avertissement éventuel « programmé en alarme non exacte »

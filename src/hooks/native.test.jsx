@@ -23,6 +23,15 @@ describe('useNativeSync', () => {
     resume()
     expect(sync).toHaveBeenCalledTimes(3)
   })
+  it('transmet le cycle à la programmation', () => {
+    asNative()
+    const sync = vi.spyOn(native, 'syncNative').mockResolvedValue({ count: 1, inexact: false })
+    vi.spyOn(native, 'onResume').mockReturnValue(() => {})
+    const tasks = [task()]
+    const cycle = { periods: [] }
+    renderHook(() => useNativeSync(tasks, true, cycle))
+    expect(sync).toHaveBeenCalledWith(tasks, expect.any(Date), cycle)
+  })
   it('ne fait rien sur le web ou sans autorisation', () => {
     const sync = vi.spyOn(native, 'syncNative').mockResolvedValue({ count: 1, inexact: false })
     asNative(false)

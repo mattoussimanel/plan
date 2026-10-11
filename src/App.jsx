@@ -15,6 +15,7 @@ import TabBar from './components/TabBar.jsx'
 import TodayView from './components/TodayView.jsx'
 import TasksView from './components/TasksView.jsx'
 import SettingsView from './components/SettingsView.jsx'
+import CycleView from './components/CycleView.jsx'
 import TaskEditor from './components/TaskEditor.jsx'
 
 export default function App() {
@@ -25,7 +26,7 @@ export default function App() {
   const { banner, dismiss, perm, setPerm, enable, check } = useReminders(stateRef)
   const now = useNow(check)
 
-  const nativeStatus = useNativeSync(state.tasks, perm === 'granted')
+  const nativeStatus = useNativeSync(state.tasks, perm === 'granted', state.cycle)
   useEffect(() => { if (isNative() && perm === 'default') enable() }, [perm, enable]) // demande l'autorisation au premier lancement
   useBackButton(useCallback(() => {
     if (editing) { setEditing(null); return true }
@@ -58,9 +59,10 @@ export default function App() {
       <main className="app">
         {tab === 'today' && (
           <TodayView state={state} dispatch={dispatch} now={now} today={key} list={list} prog={prog} next={next}
-            perm={perm} onEnableNotifs={enable} onPermission={setPerm} onToggle={toggle} onEdit={setEditing} />
+            perm={perm} onEnableNotifs={enable} onToggle={toggle} onEdit={setEditing} onOpenCycle={() => setTab('cycle')} />
         )}
         {tab === 'tasks' && <TasksView tasks={state.tasks} onEdit={setEditing} />}
+        {tab === 'cycle' && <CycleView state={state} dispatch={dispatch} now={now} />}
         {tab === 'me' && <SettingsView state={state} dispatch={dispatch} now={now} perm={perm} onEnableNotifs={enable} onPermission={setPerm} nativeStatus={nativeStatus} />}
       </main>
       <button className="fab" aria-label="Ajouter une tâche" onClick={() => setEditing(newTaskDraft(key))}>＋</button>

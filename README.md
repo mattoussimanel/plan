@@ -29,6 +29,12 @@ Les rappels sont des **notifications locales exactes** programmées par Android 
 - Build local (JDK 21 + Android SDK) : `npm run build && npx cap sync android && cd android && ./gradlew assembleRelease`.
 - Icônes/écran de démarrage : `node scripts/android-assets.mjs`.
 
+## Suivi du cycle 🌙
+Onglet **Cycle** : saisie des règles (début / fin), calendrier (règles, règles prévues, fenêtre fertile, ovulation), fiche par jour
+(flux, symptômes, note), historique, durées moyennes calculées automatiquement et réglages.
+**Rappels « X jours avant »** : pour chaque rappel, choisir l'évènement (règles, fin des règles, fenêtre fertile, ovulation),
+le nombre de jours avant (0 à 14) et l'heure (24 h) ; sur Android ils sont programmés comme des alarmes exactes.
+
 ## Notifications (version web)
 Elles sont envoyées à l'heure exacte tant que l'appli installée est ouverte ou en arrière-plan.
 Pour des alarmes fiables appli fermée : onglet *Moi* → « Exporter vers mon agenda » (.ics avec alarme).

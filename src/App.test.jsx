@@ -118,6 +118,30 @@ describe('App (intégration)', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
+  it('cycle : saisir les règles, voir les prévisions, ajouter un rappel « X jours avant »', async () => {
+    const user = setup()
+    await user.click(screen.getByRole('button', { name: /Cycle/ }))
+    expect(screen.getByRole('heading', { level: 1, name: /Mon cycle/ })).toBeInTheDocument()
+    const input = screen.getByLabelText(/Premier jour de mes dernières règles/)
+    await user.clear(input)
+    await user.type(input, '2026-10-01')
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    expect(await screen.findByRole('heading', { name: /Jour 11 du cycle/ })).toBeInTheDocument() // l’horloge du test est figée au 11 octobre
+    expect(saved().cycle.periods).toEqual([{ start: '2026-10-01', end: null }])
+    await user.click(screen.getByRole('button', { name: /Ajouter un rappel/ }))
+    await user.selectOptions(screen.getByLabelText('Combien de temps avant'), '3')
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    expect(saved().cycle.reminders.at(-1)).toMatchObject({ event: 'period', daysBefore: 3, time: '09:00' })
+  })
+
+  it('la carte cycle apparaît sur Aujourd’hui et mène à l’onglet Cycle ; plus de bouton de test sur Aujourd’hui', async () => {
+    localStorage.setItem(STATE_KEY, JSON.stringify({ cycle: { periods: [{ start: '2026-10-05' }] } }))
+    const user = setup()
+    expect(screen.queryByRole('button', { name: /Tester les notifications/ })).toBeNull()
+    await user.click(screen.getByText(/Jour 7/).closest('button'))
+    expect(screen.getByRole('heading', { level: 1, name: /Mon cycle/ })).toBeInTheDocument()
+  })
+
   it('l’état sauvegardé est rechargé au démarrage', () => {
     localStorage.setItem(STATE_KEY, JSON.stringify({ name: 'Sara', theme: 'lilas', tasks: [{ id: 'a', emoji: '🌸', title: 'Ma tâche', time: '12:00', repeat: 'daily', days: [], date: '', notify: true }] }))
     setup()
