@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/icons.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -14,7 +15,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.2",
-    "playwright": "^1.64.0",
+    "sharp": "^0.35.5",
     "vite": "^8.3.4"
   }
 }
