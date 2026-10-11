@@ -121,10 +121,20 @@ describe('SettingsView sur Android', () => {
     await user.click(await screen.findByRole('button', { name: 'Tester maintenant' }))
     expect(await screen.findByText(/canal absent/)).toBeInTheDocument()
   })
-  it('permission refusée / à demander', async () => {
+  it('permission à demander (ou plugin indisponible) : bouton Autoriser', async () => {
     const { user, onEnableNotifs } = setup('default')
     await user.click(await screen.findByRole('button', { name: 'Autoriser' }))
     expect(onEnableNotifs).toHaveBeenCalled()
+  })
+  it('plugin indisponible : message explicite et bouton Autoriser', async () => {
+    setup('unsupported')
+    expect(await screen.findByText(/indisponible/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Autoriser' })).toBeInTheDocument()
+  })
+  it('affiche la version installée', async () => {
+    vi.spyOn(native, 'appVersion').mockResolvedValue('1.0.5 (build 5)')
+    setup('granted')
+    expect(await screen.findByText(/Version installée : 1.0.5 \(build 5\)/)).toBeInTheDocument()
   })
   it('permission bloquée', async () => {
     setup('denied')

@@ -2,7 +2,7 @@ import { LocalNotifications } from '@capacitor/local-notifications'
 import { Capacitor } from '@capacitor/core'
 import { App } from '@capacitor/app'
 import { Share } from '@capacitor/share'
-import { exactAlarmStatus, isNative, nativePermission, onBackButton, onResume, requestExactAlarm, requestNativePermission, shareText, syncNative, testNative, testNow } from './native.js'
+import { appVersion, exactAlarmStatus, isNative, nativePermission, onBackButton, onResume, requestExactAlarm, requestNativePermission, shareText, syncNative, testNative, testNow } from './native.js'
 import { task } from '../test/helpers.js'
 
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: vi.fn(() => false) } }))
@@ -12,7 +12,7 @@ vi.mock('@capacitor/local-notifications', () => ({
     getPending: vi.fn(), cancel: vi.fn(), schedule: vi.fn(), createChannel: vi.fn(),
   },
 }))
-vi.mock('@capacitor/app', () => ({ App: { addListener: vi.fn(), exitApp: vi.fn() } }))
+vi.mock('@capacitor/app', () => ({ App: { addListener: vi.fn(), exitApp: vi.fn(), getInfo: vi.fn() } }))
 vi.mock('@capacitor/share', () => ({ Share: { share: vi.fn() } }))
 
 const NOW = new Date(2026, 9, 11, 8, 30)
@@ -110,6 +110,12 @@ describe('native', () => {
     cb({ isActive: true }); expect(fn).toHaveBeenCalledTimes(1)
     off(); await Promise.resolve()
     expect(remove).toHaveBeenCalled()
+  })
+  it('appVersion', async () => {
+    App.getInfo.mockResolvedValueOnce({ version: '1.0.5', build: '5' })
+    expect(await appVersion()).toBe('1.0.5 (build 5)')
+    App.getInfo.mockRejectedValueOnce(new Error('x'))
+    expect(await appVersion()).toBe('?')
   })
   it('shareText', async () => {
     await shareText('Titre', 'contenu')

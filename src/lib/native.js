@@ -70,4 +70,9 @@ export function onResume(fn) {
   return () => { sub.then((h) => h.remove()) }
 }
 
+/** Version installée (pour savoir quel APK tourne) */
+export async function appVersion() {
+  try { const { version, build } = await App.getInfo(); return `${version} (build ${build})` } catch { return '?' }
+}
+
 export const shareText = (title, text) => Share.share({ title, text, dialogTitle: title })
