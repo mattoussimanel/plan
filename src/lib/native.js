@@ -1,0 +1,65 @@
+// Pont avec Android : notifications locales exactes (fonctionnent appli fermée, survivent au redémarrage)
+import { Capacitor } from '@capacitor/core'
+import { LocalNotifications } from '@capacitor/local-notifications'
+import { App } from '@capacitor/app'
+import { Share } from '@capacitor/share'
+import { CHANNEL_ID, buildSchedule } from './schedule.js'
+
+export const isNative = () => Capacitor.isNativePlatform()
+
+const toPerm = (display) => (display === 'granted' ? 'granted' : display === 'denied' ? 'denied' : 'default')
+
+export async function nativePermission() {
+  try { return toPerm((await LocalNotifications.checkPermissions()).display) } catch { return 'unsupported' }
+}
+
+export async function requestNativePermission() {
+  try { return toPerm((await LocalNotifications.requestPermissions()).display) } catch { return 'unsupported' }
+}
+
+/** Alarmes exactes (Android 12+) : 'granted' | 'denied' */
+export async function exactAlarmStatus() {
+  try { return (await LocalNotifications.checkExactNotificationSetting()).exact_alarm } catch { return 'granted' }
+}
+export async function requestExactAlarm() {
+  try { return (await LocalNotifications.changeExactNotificationSetting()).exact_alarm } catch { return 'granted' }
+}
+
+let queue = Promise.resolve()
+
+/** Remplace toutes les notifications programmées par celles correspondant aux tâches. Appels sérialisés. */
+export function syncNative(tasks, now = new Date()) {
+  queue = queue.catch(() => {}).then(async () => {
+    const { notifications: pending } = await LocalNotifications.getPending()
+    if (pending.length) await LocalNotifications.cancel({ notifications: pending.map(({ id }) => ({ id })) })
+    await LocalNotifications.createChannel({
+      id: CHANNEL_ID, name: 'Rappels de tâches', description: 'Notifications à l’heure exacte de chaque tâche',
+      importance: 5, visibility: 1, vibration: true, lights: true, lightColor: '#FF5FA2',
+    })
+    const list = buildSchedule(tasks, now)
+    if (list.length) await LocalNotifications.schedule({ notifications: list })
+    return list.length
+  })
+  return queue
+}
+
+/** Notification de test dans 5 secondes */
+export function testNative() {
+  return LocalNotifications.schedule({
+    notifications: [{ id: 1, title: '💖 Test', body: 'Les notifications fonctionnent !', channelId: CHANNEL_ID, schedule: { at: new Date(Date.now() + 5000), allowWhileIdle: true } }],
+  })
+}
+
+/** Bouton « retour » Android : `handler` renvoie true s'il a géré l'évènement, sinon on quitte l'appli. Retourne la fonction de nettoyage. */
+export function onBackButton(handler) {
+  const sub = App.addListener('backButton', () => { if (!handler()) App.exitApp() })
+  return () => { sub.then((h) => h.remove()) }
+}
+
+/** Rappelle `fn` quand l'appli revient au premier plan. Retourne la fonction de nettoyage. */
+export function onResume(fn) {
+  const sub = App.addListener('appStateChange', ({ isActive }) => { if (isActive) fn() })
+  return () => { sub.then((h) => h.remove()) }
+}
+
+export const shareText = (title, text) => Share.share({ title, text, dialogTitle: title })

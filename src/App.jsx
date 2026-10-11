@@ -1,8 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAppState } from './hooks/useAppState.js'
 import { useNow } from './hooks/useNow.js'
 import { useReminders } from './hooks/useReminders.js'
 import { useConfetti } from './hooks/useConfetti.js'
+import { useBackButton, useNativeSync } from './hooks/useNativeReminders.js'
+import { isNative } from './lib/native.js'
 import { dateKey, minutesNow } from './lib/dates.js'
 import { tasksFor, newTaskDraft } from './lib/tasks.js'
 import { dayProgress, nextTask } from './lib/progress.js'
@@ -22,6 +24,14 @@ export default function App() {
   const [burst, fireConfetti] = useConfetti()
   const { banner, dismiss, perm, enable, check } = useReminders(stateRef)
   const now = useNow(check)
+
+  useNativeSync(state.tasks, perm === 'granted')
+  useEffect(() => { if (isNative() && perm === 'default') enable() }, [perm, enable]) // demande l'autorisation au premier lancement
+  useBackButton(useCallback(() => {
+    if (editing) { setEditing(null); return true }
+    if (tab !== 'today') { setTab('today'); return true }
+    return false
+  }, [editing, tab]))
 
   const key = dateKey(now)
   const list = tasksFor(state.tasks, key)

@@ -1,0 +1,52 @@
+name: Build Android APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - run: npm test
+      - name: Build web app and sync into the Android project
+        run: |
+          npm run build
+          npx cap sync android
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      - name: Build signed release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Verify signature and name the APK
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          "$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)apksigner" verify --print-certs "$APK"
+          cp "$APK" Ma-Journee-Rosee.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ma-Journee-Rosee-apk
+          path: Ma-Journee-Rosee.apk
+      - name: Publish APK as a GitHub release (download link for the phone)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk-latest --cleanup-tag --yes || true
+          gh release create apk-latest Ma-Journee-Rosee.apk --target "$GITHUB_SHA" \
+            --title "Ma Journée Rosée (APK Android)" \
+            --notes "Dernier build de l'application Android. Télécharge Ma-Journee-Rosee.apk sur ton téléphone et installe-le (autoriser les sources inconnues)."

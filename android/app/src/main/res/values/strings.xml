@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ma Journée Rosée</string>
+    <string name="title_activity_main">Ma Journée Rosée</string>
+    <string name="package_name">com.majournee.rosee</string>
+    <string name="custom_url_scheme">com.majournee.rosee</string>
+</resources>

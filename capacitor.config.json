@@ -1,0 +1,10 @@
+{
+  "appId": "com.majournee.rosee",
+  "appName": "Ma Journée Rosée",
+  "webDir": "dist",
+  "backgroundColor": "#fff0f6",
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "LocalNotifications": { "smallIcon": "ic_stat_icon", "iconColor": "#FF5FA2" }
+  }
+}
